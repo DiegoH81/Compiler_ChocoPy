@@ -1,8 +1,12 @@
 #include <iostream>
+#include <string>
+
+#include "token.h"
 
 int main()
 {
-	std::cout << "Hello world!\n";
+	Token test(TokenType::IDENTIFIER, "TESTING");
+	test.print();
 
 	return 0;
 }
