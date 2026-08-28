@@ -112,7 +112,7 @@ public:
 
 	void print()
 	{
-		std::cout << "< " << tokenTypeToStream(token) << ", " << lexeme << " >\n";
+		std::cout << "< " << tokenTypeToStream(token) << ", " << lexeme << " > in Line " << position.row << " col " << position.col << "\n";
 	}
 private:
 	std::string tokenTypeToStream(TokenType inToken)
