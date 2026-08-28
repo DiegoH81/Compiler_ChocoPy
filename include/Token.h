@@ -89,14 +89,25 @@ enum TokenType
 	OP_ARROW
 };
 
+class Position
+{
+public:
+	int row, col;
+
+	Position(int inRow, int inCol):
+		row(inRow), col(inCol)
+	{}
+};
+
 class Token
 {
 public:
 	TokenType token;
 	std::string lexeme;
+	Position position;
 
-	Token(TokenType inToken, const std::string& inLexeme):
-		token(inToken), lexeme(inLexeme)
+	Token(TokenType inToken, const std::string& inLexeme, const Position& inPos):
+		token(inToken), lexeme(inLexeme), position(inPos)
 	{}
 
 	void print()
