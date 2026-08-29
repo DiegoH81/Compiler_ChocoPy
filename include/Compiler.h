@@ -15,6 +15,7 @@ public:
 	{
 		scanner.loadOneFile(sourcePath);
 		scanner.scanWholeThing();
+
 	}
 
 private:

@@ -3,6 +3,7 @@ def f(x: int) -> int:
 
     if x > 0:
         # otro comentario en blanco antes de una linea real
+        # asas
         y: int = x + 1
 
         if y > 10:
