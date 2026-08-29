@@ -19,7 +19,5 @@ int main()
 
 	testScanner.bulkScan("test/");
 
-
-
 	return 0;
 }
