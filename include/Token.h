@@ -5,6 +5,7 @@
 #include <string>
 #include <iomanip>
 
+#include "Position.h"
 
 enum TokenType
 {
@@ -95,16 +96,6 @@ enum TokenType
 	UNRECOGNIZED
 };
 
-class Position
-{
-public:
-	int row, col;
-
-	Position(int inRow = -1, int inCol = -1):
-		row(inRow), col(inCol)
-	{}
-};
-
 class Token
 {
 public:
@@ -131,7 +122,6 @@ private:
 		switch (inToken)
 		{
 		case EOFL: return "EOFL";
-		case EOL: return "EOL";
 		case NEW_LINE: return "NEW_LINE";
 		case HASHTAG: return "HASHTAG";
 		case INDENT: return "INDENT";
