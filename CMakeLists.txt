@@ -18,3 +18,11 @@ if(MSVC)
 else()
     target_compile_options(chocopy PRIVATE -Wall -Wextra -Wpedantic)
 endif()
+
+add_custom_command(
+    TARGET chocopy POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/test"
+            "$<TARGET_FILE_DIR:chocopy>/test"
+    COMMENT "Copying tests"
+)

@@ -1,0 +1,15 @@
+def f(x: int) -> int:
+    # esta linea es solo comentario, no debe generar INDENT
+
+    if x > 0:
+        # otro comentario en blanco antes de una linea real
+        y: int = x + 1
+
+        if y > 10:
+            return y
+        return x
+    else:
+        return 0
+
+# comentario a nivel top-level
+print(f(5))

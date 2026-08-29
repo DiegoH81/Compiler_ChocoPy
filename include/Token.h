@@ -3,6 +3,9 @@
 
 #include <iostream>
 #include <string>
+#include <iomanip>
+
+#include "Position.h"
 
 enum TokenType
 {
@@ -70,8 +73,10 @@ enum TokenType
 	DELIM_LBRACKET,
 	DELIM_RBRACKET,
 	DELIM_COMMA,
+	DELIM_SEMICOLON,
 	DELIM_COLON,
 	DELIM_DOT,
+	OP_ARROW,
 
 	// Operator
 	OP_PLUS,
@@ -86,7 +91,9 @@ enum TokenType
 	OP_EQEQ,
 	OP_NEQ,
 	OP_ASSIGN,
-	OP_ARROW
+
+	// Error
+	UNRECOGNIZED
 };
 
 class Token
@@ -94,14 +101,20 @@ class Token
 public:
 	TokenType token;
 	std::string lexeme;
+	Position position;
 
-	Token(TokenType inToken, const std::string& inLexeme):
-		token(inToken), lexeme(inLexeme)
+	Token(TokenType inToken, const std::string& inLexeme, const Position& inPos):
+		token(inToken), lexeme(inLexeme), position(inPos)
 	{}
 
 	void print()
 	{
-		std::cout << "< " << tokenTypeToStream(token) << ", " << lexeme << " >\n";
+		std::cout << std::left
+				  << std::setw(15) << tokenTypeToStream(token)
+				  << "[ "
+				  << std::setw(15) << lexeme
+				  << "] (" << position.row << ":" << position.col << ")\n";
+
 	}
 private:
 	std::string tokenTypeToStream(TokenType inToken)
@@ -109,7 +122,6 @@ private:
 		switch (inToken)
 		{
 		case EOFL: return "EOFL";
-		case EOL: return "EOL";
 		case NEW_LINE: return "NEW_LINE";
 		case HASHTAG: return "HASHTAG";
 		case INDENT: return "INDENT";
@@ -158,6 +170,7 @@ private:
 		case DELIM_RBRACKET: return "DELIM_RBRACKET";
 		case DELIM_COMMA: return "DELIM_COMMA";
 		case DELIM_COLON: return "DELIM_COLON";
+		case DELIM_SEMICOLON: return "DELIM_SEMICOLON";
 		case DELIM_DOT: return "DELIM_DOT";
 		case OP_PLUS: return "OP_PLUS";
 		case OP_MINUS: return "OP_MINUS";
@@ -176,6 +189,5 @@ private:
 		}
 	}
 };
-
 
 #endif
