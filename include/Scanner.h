@@ -505,6 +505,7 @@ private:
 		if (spacesCount > top)
 		{
 			spacesStack.push(spacesCount);
+			start_pos.col = spacesCount;
 			pendingTokens.push(Token(TokenType::INDENT, "INDENT", start_pos));
 		}
 		else if (spacesCount < top)
@@ -512,6 +513,7 @@ private:
 			while (top > spacesCount)
 			{
 				spacesStack.pop();
+				start_pos.col = top;
 				pendingTokens.push(Token(TokenType::DEDENT, "DEDENT", start_pos));
 
 				top = spacesStack.top();
