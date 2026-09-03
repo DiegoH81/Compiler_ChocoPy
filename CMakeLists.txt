@@ -7,26 +7,22 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-file(GLOB_RECURSE CORE_SOURCES 
-    CONFIGURE_DEPENDS
-    "src/*.cpp"
+file(GLOB_RECURSE ALL_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE ALL_HEADERS CONFIGURE_DEPENDS "include/*.h" "include/*.hpp")
+
+add_executable(chocopy ${ALL_SOURCES} ${ALL_HEADERS})
+target_include_directories(chocopy PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+
+if(MSVC)
+    target_compile_options(chocopy PRIVATE /W4)
+else()
+    target_compile_options(chocopy PRIVATE -Wall -Wextra -Wpedantic)
+endif()
+
+add_custom_command(
+    TARGET chocopy POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+            "${CMAKE_CURRENT_SOURCE_DIR}/test"
+            "$<TARGET_FILE_DIR:chocopy>/test"
+    COMMENT "Copying tests"
 )
-list(REMOVE_ITEM CORE_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
-
-if(CORE_SOURCES)
-    add_library(chocopy_core ${CORE_SOURCES})
-    target_include_directories(chocopy_core PUBLIC include)
-
-    if(MSVC)
-        target_compile_options(chocopy_core PRIVATE /W4)
-    else()
-        target_compile_options(chocopy_core PRIVATE -Wall -Wextra -Wpedantic)
-    endif()
-endif()
-
-add_executable(chocopy src/main.cpp)
-target_include_directories(chocopy PRIVATE include)
-
-if(TARGET chocopy_core)
-    target_link_libraries(chocopy PRIVATE chocopy_core)
-endif()

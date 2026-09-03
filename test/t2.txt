@@ -1,0 +1,6 @@
+def suma(x: int, y: int) -> int:
+    return x + y
+
+z: int = 0
+z = suma(3, 4)
+print(z)
