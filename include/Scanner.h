@@ -53,7 +53,7 @@ public:
 		while (true)
 		{
 			auto token = getToken();
-			token.print();
+			std::cout << "DEBUG SCAN - " << token << "\n";
 
 
 			if (token.token == TokenType::EOFL)
@@ -480,6 +480,8 @@ private:
 	void processIndentation()
 	{
 		int spacesCount = 0;
+
+		Position start_pos = currentPos;
 		while (!isAtEnd(buffPos) && (peekChar() == ' '))
 		{
 			spacesCount++;
@@ -503,16 +505,24 @@ private:
 		if (spacesCount > top)
 		{
 			spacesStack.push(spacesCount);
-			pendingTokens.push(Token(TokenType::INDENT, "INDENT", currentPos));
+			start_pos.col = spacesCount;
+			pendingTokens.push(Token(TokenType::INDENT, "INDENT", start_pos));
 		}
 		else if (spacesCount < top)
 		{
 			while (top > spacesCount)
 			{
 				spacesStack.pop();
-				pendingTokens.push(Token(TokenType::DEDENT, "DEDENT", currentPos));
+				start_pos.col = top;
+				pendingTokens.push(Token(TokenType::DEDENT, "DEDENT", start_pos));
 
 				top = spacesStack.top();
+			}
+
+			if (spacesStack.top() != spacesCount)
+			{
+				logError(currentPos, "INDENT", "Invalid indentation level");
+				pendingTokens.push(Token(TokenType::UNRECOGNIZED, "INVALID INDENT", currentPos));
 			}
 		}
 	}
@@ -525,7 +535,7 @@ private:
 			spacesStack.pop();
 
 
-			currentPos.col = top;
+			currentPos.col = 1;
 			pendingTokens.push(Token(TokenType::DEDENT, "DEDENT", currentPos));
 			currentPos.row++;
 

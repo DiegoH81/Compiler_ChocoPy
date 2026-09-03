@@ -107,17 +107,18 @@ public:
 		token(inToken), lexeme(inLexeme), position(inPos)
 	{}
 
-	void print()
+	friend std::ostream& operator << (std::ostream& os, const Token& t)
 	{
-		std::cout << std::left
-				  << std::setw(15) << tokenTypeToStream(token)
-				  << "[ "
-				  << std::setw(15) << lexeme
-				  << "] (" << position.row << ":" << position.col << ")\n";
+		os << std::left
+			<< std::setw(15) << tokenTypeToStream(t.token)
+			<< "[ "
+			<< std::setw(15) << t.lexeme
+			<< "] (" << t.position.row << ":" << t.position.col << ")";
 
+		return os;
 	}
 private:
-	std::string tokenTypeToStream(TokenType inToken)
+	static std::string tokenTypeToStream(TokenType inToken)
 	{
 		switch (inToken)
 		{
