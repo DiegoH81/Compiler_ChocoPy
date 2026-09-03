@@ -64,32 +64,47 @@ public:
 		}
 	}
 
-	void bulkScan(const std::string folderPath)
+	void bulkScan(const std::string& folderPath)
 	{
-		std::vector<std::string> fileList;
-		std::filesystem::path baseDir(folderPath);
+		std::filesystem::path baseDir =std::filesystem::path(CHOCOPY_ROOT) / folderPath;
+		std::cout << "INITIALIZING BULK LOAD\n";
+		std::cout << "Directory: " << baseDir << "\n";
 
-		for (const auto& entry : std::filesystem::directory_iterator(baseDir))
+		if (!std::filesystem::exists(baseDir))
+		{
+			std::cerr << "ERROR: Directory does not exist: "
+				<< baseDir << "\n";
+			return;
+		}
+
+		if (!std::filesystem::is_directory(baseDir))
+		{
+			std::cerr << "ERROR: Path is not a directory: "
+				<< baseDir << "\n";
+			return;
+		}
+
+		std::vector<std::string> fileList;
+
+		for (const auto& entry :
+			std::filesystem::directory_iterator(baseDir))
 		{
 			if (entry.is_regular_file())
 			{
-				std::filesystem::path fullPath = baseDir / entry.path().filename();
-				fileList.push_back(fullPath.string());
+				fileList.push_back(entry.path().string());
 			}
 		}
 
-		std::cout << "INITIALIZING BULK LOAD\n";
-		for (auto& f : fileList)
+		for (const auto& f : fileList)
 		{
 			std::cout << "Scanning file: " << f << "\n";
+
 			buffer.clear();
+
 			loadOneFile(f);
-
 			scanWholeThing();
-
 			std::cout << "\n\n\n";
 		}
-
 	}
 
 	Token getToken()
