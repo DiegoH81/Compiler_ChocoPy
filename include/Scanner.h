@@ -165,7 +165,7 @@ public:
 				return Token(TokenType::OP_SLASH_SLASH, "//", startPos);
 			}
 
-			logError(currentPos, "OPERATOR", "Unrecognized /");
+			logError(startPos, "OPERATOR", "Unrecognized /");
 			return Token(TokenType::UNRECOGNIZED, "/", startPos);
 		}
 		case '%':
@@ -248,7 +248,7 @@ public:
 
 			if (number.length() > 1 && number[0] == '0')
 			{
-				logError(currentPos, "INTEGER", "Integer starting with 0");
+				logError(startPos, "INTEGER", "Integer starting with 0");
 				return Token(TokenType::UNRECOGNIZED, number, startPos);
 			}
 
@@ -259,7 +259,7 @@ public:
 
 			if (value > INT32_MAX || value < INT32_MIN)
 			{
-				logError(currentPos, "INTEGER", "Out of 32 bits range");
+				logError(startPos, "INTEGER", "Out of 32 bits range");
 				return Token(TokenType::UNRECOGNIZED, number, startPos);
 			}
 
@@ -374,9 +374,9 @@ public:
 			while (peekChar() == ' ' || peekChar() == '\t')
 				getChar();
 
+			startPos = currentPos;
 			c = getChar();
 
-			startPos = currentPos;
 			break;
 		}
 		// Variable 1
