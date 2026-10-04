@@ -15,17 +15,25 @@
 class Scanner
 {
 public:
-	Scanner() :
+	Scanner(std::filesystem::path in_base_dir) :
 		buffer(), buffPos(0), isNewLine(true), spacesStack(),
-		currentPos(1, 1), errorCounter(0), pendingTokens()
+		currentPos(1, 1), errorCounter(0), pendingTokens(), base_dir(in_base_dir)
 	{
 		initKeywords();
 
 		spacesStack.push(0);
 	}
 
-	void loadOneFile(const std::string& sourcePath)
+	void loadOneFile(const std::filesystem::path& filePath)
 	{
+		std::filesystem::path fullPath = filePath.is_absolute() ? filePath : (base_dir / filePath);
+
+		if (!std::filesystem::exists(fullPath))
+		{
+			std::cerr << "ERROR: File does not exists!: " << fullPath << "\n";
+			return;
+		}
+
 		buffPos = 0;
 		isNewLine = true;
 		spacesStack = std::stack<int>();
@@ -36,8 +44,7 @@ public:
 		pendingTokens = std::queue<Token>();
 		buffer.clear();
 
-
-		loadFile(sourcePath);
+		loadFile(fullPath.string());
 	}
 
 	void scanWholeThing()
@@ -64,46 +71,29 @@ public:
 		}
 	}
 
-	void bulkScan(const std::string& folderPath)
+	void bulkScan(const std::string& relativeFolderPath)
 	{
-		std::filesystem::path baseDir =std::filesystem::path(CHOCOPY_ROOT) / folderPath;
+		std::filesystem::path fullFolder = base_dir / relativeFolderPath;
+		
 		std::cout << "INITIALIZING BULK LOAD\n";
-		std::cout << "Directory: " << baseDir << "\n";
+		std::cout << "Directory: " << fullFolder << "\n";
 
-		if (!std::filesystem::exists(baseDir))
+		if (!std::filesystem::exists(fullFolder) || !std::filesystem::is_directory(fullFolder))
 		{
-			std::cerr << "ERROR: Directory does not exist: "
-				<< baseDir << "\n";
+			std::cerr << "ERROR: Invalid directory: " << fullFolder << "\n";
 			return;
 		}
 
-		if (!std::filesystem::is_directory(baseDir))
-		{
-			std::cerr << "ERROR: Path is not a directory: "
-				<< baseDir << "\n";
-			return;
-		}
-
-		std::vector<std::string> fileList;
-
-		for (const auto& entry :
-			std::filesystem::directory_iterator(baseDir))
+		for (const auto& entry : std::filesystem::directory_iterator(fullFolder))
 		{
 			if (entry.is_regular_file())
 			{
-				fileList.push_back(entry.path().string());
+				std::cout << "Scanning file: " << entry.path().filename() << "\n\n";
+				buffer.clear();
+				loadOneFile(entry.path());
+				scanWholeThing();
+				std::cout << "\n\n\n";
 			}
-		}
-
-		for (const auto& f : fileList)
-		{
-			std::cout << "Scanning file: " << f << "\n";
-
-			buffer.clear();
-
-			loadOneFile(f);
-			scanWholeThing();
-			std::cout << "\n\n\n";
 		}
 	}
 
@@ -271,7 +261,6 @@ public:
 			long long value = std::stoll(number);
 
 
-
 			if (value > INT32_MAX || value < INT32_MIN)
 			{
 				logError(startPos, "INTEGER", "Out of 32 bits range");
@@ -429,6 +418,7 @@ private:
 	int buffPos, errorCounter;
 	bool isNewLine;
 	Position currentPos;
+	std::filesystem::path base_dir;
 	std::string buffer;
 
 	std::stack<int> spacesStack;

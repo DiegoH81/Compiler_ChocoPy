@@ -9,10 +9,12 @@
 
 int main()
 {
+	std::filesystem::path baseDir = std::filesystem::path(CHOCOPY_ROOT);
+
 	Token test(TokenType::IDENTIFIER, "TESTING", Position(1, 10));
 	std::cout << test << std::endl;
 
-	Scanner testScanner;
+	Scanner testScanner(baseDir);
 
 	//testScanner.loadOneFile("test/t1.txt");
 	//testScanner.scanWholeThing();
