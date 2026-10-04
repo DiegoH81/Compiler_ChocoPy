@@ -15,9 +15,9 @@
 class Scanner
 {
 public:
-	Scanner(std::filesystem::path in_base_dir) :
+	Scanner(std::filesystem::path in_baseDir) :
 		buffer(), buffPos(0), isNewLine(true), spacesStack(),
-		currentPos(1, 1), errorCounter(0), pendingTokens(), base_dir(in_base_dir)
+		currentPos(1, 1), errorCounter(0), pendingTokens(), baseDir(in_baseDir)
 	{
 		initKeywords();
 
@@ -26,7 +26,7 @@ public:
 
 	void loadOneFile(const std::filesystem::path& filePath)
 	{
-		std::filesystem::path fullPath = filePath.is_absolute() ? filePath : (base_dir / filePath);
+		std::filesystem::path fullPath = filePath.is_absolute() ? filePath : (baseDir / filePath);
 
 		if (!std::filesystem::exists(fullPath))
 		{
@@ -73,7 +73,7 @@ public:
 
 	void bulkScan(const std::string& relativeFolderPath)
 	{
-		std::filesystem::path fullFolder = base_dir / relativeFolderPath;
+		std::filesystem::path fullFolder = baseDir / relativeFolderPath;
 		
 		std::cout << "INITIALIZING BULK LOAD\n";
 		std::cout << "Directory: " << fullFolder << "\n";
@@ -418,7 +418,7 @@ private:
 	int buffPos, errorCounter;
 	bool isNewLine;
 	Position currentPos;
-	std::filesystem::path base_dir;
+	std::filesystem::path baseDir;
 	std::string buffer;
 
 	std::stack<int> spacesStack;
