@@ -8,7 +8,7 @@ class Compiler
 {
 public:
 	Compiler():
-		scanner()
+		PROJECT_PATH(CHOCOPY_ROOT), scanner(PROJECT_PATH)
 	{}
 
 	void compile(const std::string& sourcePath)
@@ -19,6 +19,8 @@ public:
 	}
 
 private:
+	std::filesystem::path PROJECT_PATH;
+
 	Scanner scanner;
 };
 
