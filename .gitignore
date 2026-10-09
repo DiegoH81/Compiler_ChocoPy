@@ -13,6 +13,8 @@
 !*.md
 !*.py
 !*.sh
+!tables/
+!test/
 
 build/
 build-*/
