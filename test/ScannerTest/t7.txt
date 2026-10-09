@@ -1,0 +1,6 @@
+a: str = "Hello"
+b: str = "He\"ll\"o"
+c: str = "He\\\"llo"
+d: str = "Hell\o"
+e: str = "esta cadena nunca cierra
+f: str = "ok despues del error"

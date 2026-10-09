@@ -14,7 +14,10 @@
 !*.py
 !*.sh
 !tables/
+!tables/**
+
 !test/
+!test/**
 
 build/
 build-*/
