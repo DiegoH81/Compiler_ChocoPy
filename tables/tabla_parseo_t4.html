@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tabla de Parseo LR</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+        h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; max-width: 1000px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: center; }
+        th { background-color: #2c3e50; color: white; }
+        th.action-hdr { background-color: #2980b9; }
+        th.goto-hdr { background-color: #27ae60; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .state-col { font-weight: bold; background-color: #eaeded; }
+        .empty-cell { color: #aaa; }
+    </style>
+</head>
+<body>
+    <h2>Tabla de Parseo - Compilador</h2>
+    <table>
+        <thead>
+            <tr>
+                <th rowspan="2">Estado</th>
+                <th class="action-hdr" colspan="4">ACTION (Terminales)</th>
+                <th class="goto-hdr" colspan="2">GOTO (No Terminales)</th>
+            </tr>
+            <tr>
+                <th class="action-hdr">id</th>
+                <th class="action-hdr">+</th>
+                <th class="action-hdr">*</th>
+                <th class="action-hdr">$</th>
+                <th class="goto-hdr">E</th>
+                <th class="goto-hdr">S'</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="state-col">0</td>
+                <td>s2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>1</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">1</td>
+                <td class="empty-cell">-</td>
+                <td>s3</td>
+                <td>s4</td>
+                <td>acc</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">2</td>
+                <td class="empty-cell">-</td>
+                <td>r3</td>
+                <td>r3</td>
+                <td>r3</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">3</td>
+                <td>s2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>5</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">4</td>
+                <td>s2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>6</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">5</td>
+                <td class="empty-cell">-</td>
+                <td>s3/r1</td>
+                <td>s4/r1</td>
+                <td>r1</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">6</td>
+                <td class="empty-cell">-</td>
+                <td>s3/r2</td>
+                <td>s4/r2</td>
+                <td>r2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
