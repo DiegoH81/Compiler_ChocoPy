@@ -22,16 +22,17 @@
         <thead>
             <tr>
                 <th rowspan="2">Estado</th>
-                <th class="action-hdr" colspan="3">ACTION (Terminales)</th>
-                <th class="goto-hdr" colspan="4">GOTO (No Terminales)</th>
+                <th class="action-hdr" colspan="6">ACTION (Terminales)</th>
+                <th class="goto-hdr" colspan="2">GOTO (No Terminales)</th>
             </tr>
             <tr>
-                <th class="action-hdr">a</th>
-                <th class="action-hdr">b</th>
+                <th class="action-hdr">id</th>
+                <th class="action-hdr">+</th>
+                <th class="action-hdr">*</th>
+                <th class="action-hdr">(</th>
+                <th class="action-hdr">)</th>
                 <th class="action-hdr">$</th>
-                <th class="goto-hdr">S</th>
-                <th class="goto-hdr">A</th>
-                <th class="goto-hdr">B</th>
+                <th class="goto-hdr">E</th>
                 <th class="goto-hdr">S'</th>
             </tr>
         </thead>
@@ -39,79 +40,197 @@
             <tr>
                 <td class="state-col">0</td>
                 <td>s3</td>
-                <td>r3</td>
-                <td>r3</td>
-                <td>1</td>
-                <td>2</td>
                 <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>s2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>1</td>
                 <td class="empty-cell">-</td>
             </tr>
             <tr>
                 <td class="state-col">1</td>
                 <td class="empty-cell">-</td>
+                <td>s4</td>
+                <td>s5</td>
+                <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
                 <td>acc</td>
-                <td class="empty-cell">-</td>
-                <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
             </tr>
             <tr>
                 <td class="state-col">2</td>
-                <td class="empty-cell">-</td>
-                <td>s5</td>
-                <td>r5</td>
+                <td>s8</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
-                <td>4</td>
+                <td>s7</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>6</td>
                 <td class="empty-cell">-</td>
             </tr>
             <tr>
                 <td class="state-col">3</td>
-                <td>s3</td>
-                <td>r3</td>
-                <td>r3</td>
                 <td class="empty-cell">-</td>
-                <td>6</td>
+                <td>r4</td>
+                <td>r4</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>r4</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
             </tr>
             <tr>
                 <td class="state-col">4</td>
+                <td>s3</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
-                <td>r1</td>
+                <td>s2</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
-                <td class="empty-cell">-</td>
+                <td>9</td>
                 <td class="empty-cell">-</td>
             </tr>
             <tr>
                 <td class="state-col">5</td>
-                <td class="empty-cell">-</td>
-                <td>s5</td>
-                <td>r5</td>
+                <td>s3</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
-                <td>7</td>
+                <td>s2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>10</td>
                 <td class="empty-cell">-</td>
             </tr>
             <tr>
                 <td class="state-col">6</td>
                 <td class="empty-cell">-</td>
-                <td>r2</td>
-                <td>r2</td>
+                <td>s11</td>
+                <td>s12</td>
                 <td class="empty-cell">-</td>
+                <td>s13</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
             </tr>
             <tr>
                 <td class="state-col">7</td>
+                <td>s8</td>
                 <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>s7</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>14</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">8</td>
+                <td class="empty-cell">-</td>
+                <td>r4</td>
+                <td>r4</td>
                 <td class="empty-cell">-</td>
                 <td>r4</td>
                 <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">9</td>
+                <td class="empty-cell">-</td>
+                <td>s4/r1</td>
+                <td>s5/r1</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>r1</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">10</td>
+                <td class="empty-cell">-</td>
+                <td>s4/r2</td>
+                <td>s5/r2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>r2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">11</td>
+                <td>s8</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>s7</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>15</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">12</td>
+                <td>s8</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>s7</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>16</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">13</td>
+                <td class="empty-cell">-</td>
+                <td>r3</td>
+                <td>r3</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td>r3</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">14</td>
+                <td class="empty-cell">-</td>
+                <td>s11</td>
+                <td>s12</td>
+                <td class="empty-cell">-</td>
+                <td>s17</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">15</td>
+                <td class="empty-cell">-</td>
+                <td>s11/r1</td>
+                <td>s12/r1</td>
+                <td class="empty-cell">-</td>
+                <td>r1</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">16</td>
+                <td class="empty-cell">-</td>
+                <td>s11/r2</td>
+                <td>s12/r2</td>
+                <td class="empty-cell">-</td>
+                <td>r2</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+                <td class="empty-cell">-</td>
+            </tr>
+            <tr>
+                <td class="state-col">17</td>
+                <td class="empty-cell">-</td>
+                <td>r3</td>
+                <td>r3</td>
+                <td class="empty-cell">-</td>
+                <td>r3</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
                 <td class="empty-cell">-</td>
