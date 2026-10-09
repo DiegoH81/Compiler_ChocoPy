@@ -1,0 +1,4 @@
+S -> if ( E ) S endif
+S -> if ( E ) S else S endif
+S -> id = E ;
+E -> id
