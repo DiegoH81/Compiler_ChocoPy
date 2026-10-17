@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <fstream>
+#include <stack>
+#include <queue>
 #include <filesystem>
 #include <algorithm>
 #include "TableDrawer.h"
@@ -41,6 +43,13 @@ struct Conflicto {
 
 using ItemSet = std::vector<LR1Item>;
 
+struct FollowingTable {
+    std::stack<int> states;
+    std::stack<std::string> stac;
+    std::queue<std::string> input;
+    std::string action;
+};
+
 class Parser {
 private:
     std::filesystem::path baseDir;
@@ -58,7 +67,7 @@ private:
     std::string augmentedStart = "S'";
 
     std::vector<Transition> transitions;
-
+    std::vector<StateRow> table;
 public:
     std::vector<Conflicto> conflictos;
 
@@ -594,7 +603,8 @@ public:
     }
 
     void llenarTablas(const std::string& nombreArchivo = "tabla_parseo.html") {
-        std::vector<StateRow> table;
+        table.clear();
+        conflictos.clear();
         std::vector<ItemSet> CCs = coleccionCanonica();
 
         for (int i = 0; i < CCs.size(); i++) {
@@ -719,5 +729,154 @@ public:
         std::cout << "Fallidas al cargar: " << pruebasFallidas << std::endl;
     }
 
+
+    void printStack(std::stack<int> pila) {
+        while (!pila.empty()) {
+            std::cout << pila.top() << " ";
+            pila.pop();
+        }
+    }
+
+    void printStack(std::stack<std::string> pila) {
+        while (!pila.empty()) {
+            std::cout << pila.top() << " ";
+            pila.pop();
+        }
+    }
+
+    void printFollowing(const std::vector<FollowingTable>& followTable) {
+        std::cout << std::endl << std::left << std::setw(25) << "Estados" << std::setw(20) << "Pila" << std::setw(25) << "Entrada" << "Accion" << std::endl;
+
+        for (const FollowingTable& row : followTable) {
+            std::stack<int> states = row.states;
+            std::stack<std::string> stac = row.stac;
+            std::queue<std::string> input = row.input;
+
+            std::string estados, pila, entrada;
+
+            while (!states.empty()) {
+                estados = std::to_string(states.top()) + " " + estados;
+                states.pop();
+            }
+
+            while (!stac.empty()) {
+                pila = stac.top() + " " + pila;
+                stac.pop();
+            }
+
+            while (!input.empty()) {
+                entrada += input.front() + " ";
+                input.pop();
+            }
+            std::cout << std::left << std::setw(25) << estados << std::setw(20) << pila << std::setw(25) << entrada << row.action << std::endl;
+        }
+    }
+
+    bool checkAction(int CCs,std::string input){
+        return table[CCs].actionMap.find(input) != table[CCs].actionMap.end();
+    }
+
+    std::string nextWord(std::queue<std::string>& que) {
+        if (que.empty()) return "";
+
+        std::string word = que.front();
+        que.pop();
+        return word;
+    }
+
+    void following(const std::string& input) {
+        if (input.empty()) {
+            throw std::runtime_error("Error de entrada: la cadena de entrada esta vacia");
+        }
+
+        if (table.empty()) {
+            throw std::runtime_error("Error del parser: la tabla LR(1) no ha sido generada.");
+        }
+
+        std::queue<std::string> que;
+        std::stringstream ss(input);
+        std::string word;
+
+        while (ss >> word) {
+            que.push(word);
+        }
+        que.push("$");
+
+        word = nextWord(que);
+
+        std::vector<FollowingTable> followTable;
+
+        FollowingTable Current;
+        Current.states.push(0);
+        Current.stac.push("$");
+        Current.input = que;
+
+        while (true) {
+            if (Current.states.empty()) {
+                throw std::runtime_error("Error interno del parser: la pila de estados esta vacia.");
+            }
+
+            int state = Current.states.top();
+
+            if (!checkAction(state, word)) {
+                throw std::runtime_error("Error sintatico no existe el estado o no reconoce la palabra en la tabla");
+            }
+
+            Current.action = table[state].actionMap[word];
+
+            FollowingTable fila = Current;
+            std::queue<std::string> entradaActual;
+            entradaActual.push(word);
+
+            std::queue<std::string> restante = Current.input;
+            while (!restante.empty()) {
+                entradaActual.push(restante.front());
+                restante.pop();
+            }
+
+            fila.input = entradaActual;
+            followTable.push_back(fila);
+
+            if (Current.action[0] == 'r') {
+                int toRemove = std::stoi(Current.action.substr(1)) - 1;
+                Production produccion = productions[toRemove];
+
+                std::string toPut = produccion.noTerminal;
+                int sizeRemove = produccion.derivacion.size();
+
+                for (int i = 0; i < sizeRemove; i++) {
+                    Current.states.pop();
+                    Current.stac.pop();
+                }
+
+                if (Current.states.empty()) {
+                    throw std::runtime_error("Caso raro: se fueron todos los estados");
+                }
+
+                int estadoActual = Current.states.top();
+                Current.states.push(
+                    std::stoi(table[estadoActual].gotoMap[toPut])
+                );
+                Current.stac.push(toPut);
+            }
+            else if (Current.action[0] == 's') {
+                int toRemove = std::stoi(Current.action.substr(1));
+
+                Current.stac.push(word);
+                Current.states.push(toRemove);
+
+                word = nextWord(Current.input);
+            }
+            else if (Current.action == "acc") {
+                std::cout << "Aceptado!!!!" << std::endl;
+                break;
+            }
+            else {
+                throw std::runtime_error("Fallo :(");
+            }
+        }
+
+        printFollowing(followTable);
+    }
 
 };

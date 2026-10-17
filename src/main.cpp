@@ -20,7 +20,7 @@ int main()
 
     // Individual test
     std::cout << "\n\n\nTesting individual\n";
-    std::filesystem::path testi = CHOCOPY_ROOT + std::string{ "/test/ParserTest/t12.txt" };
+    std::filesystem::path testi = CHOCOPY_ROOT + std::string{ "/test/ParserTest/t8.txt" };
     testParser.LoadFile(testi);
 
     testParser.first();
@@ -71,12 +71,30 @@ int main()
         std::cout << std::endl;
 
         for (const auto& c : testParser.conflictos)
-            std::cout << "Tipo: " << c.tipo << "Estado: " << c.estado << "Simbolo: " << c.simbolo <<
-                         "Accion existente: " << c.accionExistente <<
-                         "Accion nueva: " << c.accionNueva << "\n";
+            std::cout << "Tipo: " << c.tipo << " | Estado: " << c.estado << " | Simbolo: " << c.simbolo <<
+                         " | Accion existente: " << c.accionExistente <<
+                         " | Accion nueva: " << c.accionNueva << "\n";
     }
     else
         std::cout << "Tabla LR(1) construida sin conflictos";
+
+
+    testi = baseDir / "test/ParserTest/t8.txt";
+    testParser.LoadFile(testi);
+
+    testParser.first();
+    testParser.llenarTablas();
+
+    std::cout << "Probando parser LR(1)" << std::endl;
+
+    std::string input = "id * ( id + id )";
+
+    try {
+        testParser.following(input);
+    }
+    catch (const std::exception& e) {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
 
 	return 0;
 }
