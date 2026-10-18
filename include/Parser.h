@@ -828,8 +828,8 @@ public:
         }
     }
 
-    void initializePanicMode(const std::vector<std::string>& seleccionados = {}, bool fijar = false, std::string fijado = "S") {
-        if (panicConfig.initialized) return;
+    void initializePanicMode(const std::vector<std::string>& seleccionados = {}) {
+        panicConfig = PanicConfig{};
 
         if (firstSet.empty()) {
             first();
@@ -839,47 +839,24 @@ public:
             follow();
         }
 
-        if (fijar) {
-            panicConfig.noTerminales = { fijado };
-        }
-        else {
-            panicConfig.noTerminales = seleccionados;
-
-            if (panicConfig.noTerminales.empty()) {
-                std::map<std::string, int> conteo;
-
-                for (const auto& fila : table) {
-                    for (const auto& entrada : fila.gotoMap) {
-                        conteo[entrada.first]++;
-                    }
-                }
-
-                std::string mayor;
-                int maximo = 0;
-                for (const auto& entrada : conteo) {
-                    if (entrada.second > maximo) {
-                        maximo = entrada.second;
-                        mayor = entrada.first;
-                    }
-                }
-
-                if (!mayor.empty()) {
-                    panicConfig.noTerminales.push_back(mayor);
-                }
+        for (const std::string& nt : seleccionados) {
+            if (noTerminales.find(nt) == noTerminales.end() || nt == augmentedStart) {
+                throw std::runtime_error("Modo panico: '" + nt + "' no es un no terminal valido");
             }
 
-        }
+            if (std::find(panicConfig.noTerminales.begin(),panicConfig.noTerminales.end(),nt) == panicConfig.noTerminales.end()) {
+                panicConfig.noTerminales.push_back(nt);
+            }
 
-        for (auto nt : panicConfig.noTerminales) {
             auto it = followSet.find(nt);
             if (it != followSet.end()) {
-                panicConfig.syncTokens.insert(it->second.begin(), it->second.end());
+                panicConfig.syncTokens.insert(it->second.begin(),it->second.end());
             }
         }
 
         for (int i = 0; i < static_cast<int>(table.size()); i++) {
             for (const auto& entrada : table[i].gotoMap) {
-                if (std::find(panicConfig.noTerminales.begin(), panicConfig.noTerminales.end(), entrada.first) != panicConfig.noTerminales.end()) {
+                if (std::find(panicConfig.noTerminales.begin(),panicConfig.noTerminales.end(),entrada.first) != panicConfig.noTerminales.end()) {
                     panicConfig.gotosNum.push_back(i);
                     break;
                 }
@@ -910,7 +887,9 @@ public:
     }
 
     void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry) {
-        initializePanicMode({ "A" }, false);
+        if (!panicConfig.initialized) {
+            initializePanicMode();
+        }
 
         auto& syncTokens = panicConfig.syncTokens;
         auto& gotos = panicConfig.gotosNum;
