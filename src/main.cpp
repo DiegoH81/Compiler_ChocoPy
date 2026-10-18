@@ -20,7 +20,7 @@ int main()
 
     // Individual test
     std::cout << "\n\n\nTesting individual\n";
-    std::filesystem::path testi = CHOCOPY_ROOT + std::string{ "/test/ParserTest/t8.txt" };
+    std::filesystem::path testi = CHOCOPY_ROOT + std::string{ "/test/ParserTest/t7.txt" };
     testParser.LoadFile(testi);
 
     testParser.first();
@@ -79,15 +79,19 @@ int main()
         std::cout << "Tabla LR(1) construida sin conflictos";
 
 
-    testi = baseDir / "test/ParserTest/t8.txt";
+    testi = baseDir / "test/ParserTest/t7.txt";
     testParser.LoadFile(testi);
 
     testParser.first();
-    testParser.llenarTablas();
+    testParser.PrintFirstSet();
 
+    testParser.follow();
+    testParser.PrintFollowSet();
+
+    testParser.llenarTablas();
     std::cout << "Probando parser LR(1)" << std::endl;
 
-    std::string input = "id * ( id + id )";
+    std::string input = "( b > )";
 
     try {
         testParser.following(input);

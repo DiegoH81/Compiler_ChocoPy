@@ -14,6 +14,9 @@
 #include "TableDrawer.h"
 
 const std::string EPSILON = "''";
+const std::string ENDOF = "$";
+
+enum Mode {NORMAL,CHOCOPY};
 
 struct Production {
     int id;
@@ -50,6 +53,13 @@ struct FollowingTable {
     std::string action;
 };
 
+struct PanicConfig {
+    std::vector<std::string> noTerminales;
+    std::unordered_set<std::string> syncTokens;
+    std::vector<int> gotosNum;
+    bool initialized = false;
+};
+
 class Parser {
 private:
     std::filesystem::path baseDir;
@@ -61,16 +71,20 @@ private:
     std::unordered_set<std::string> noTerminales;
     std::unordered_set<std::string> terminales;
     std::vector<std::string> ordenSimbolos;
+
     std::unordered_map<std::string, std::unordered_set<std::string>> firstSet;
+    std::unordered_map<std::string, std::unordered_set<std::string>> followSet;
 
     std::string startSymbol;
     std::string augmentedStart = "S'";
 
     std::vector<Transition> transitions;
     std::vector<StateRow> table;
+
+    PanicConfig panicConfig;
 public:
     std::vector<Conflicto> conflictos;
-
+    Mode mode = NORMAL;
 public:
     Parser(std::filesystem::path inBaseDir) : baseDir(inBaseDir) {};
 
@@ -88,6 +102,10 @@ public:
         startSymbol.clear();
         transitions.clear();
         conflictos.clear();
+
+        followSet.clear();
+        table.clear();
+        panicConfig = PanicConfig{};
 
         std::cout << "Parser limpiado correctamente" << std::endl;
     }
@@ -628,8 +646,8 @@ public:
                 Production prod = productions[cc.productionId];
 
                 if (cc.dot >= (int)prod.derivacion.size()) {
-                    if (prod.noTerminal == augmentedStart && cc.lookahead == "$") {
-                        agregarAccion(actionMap, i, "$", "acc");
+                    if (prod.noTerminal == augmentedStart && cc.lookahead == ENDOF) {
+                        agregarAccion(actionMap, i, ENDOF, "acc");
                     } else {
                         agregarAccion(actionMap, i, cc.lookahead, "r" + std::to_string(cc.productionId + 1));
                     }
@@ -729,6 +747,197 @@ public:
         std::cout << "Fallidas al cargar: " << pruebasFallidas << std::endl;
     }
 
+    void follow() {
+        if (firstSet.empty()) return;
+
+        for (auto NT : noTerminales) {
+            followSet[NT];
+        }
+        followSet[augmentedStart].insert(ENDOF);
+
+        bool cambio = true;
+        while (cambio) {
+            cambio = false;
+
+            for (Production prod : productions) {
+                std::string noTerminal = prod.noTerminal;
+                std::unordered_set<std::string> trailer = followSet[noTerminal];
+
+                std::vector<std::string>& deri = prod.derivacion;
+                for (int i = deri.size() - 1;i >= 0;i--) {
+                    std::string simbolo = deri[i];
+
+                    if (noTerminales.find(simbolo) != noTerminales.end()) {
+                        int tamanoPrevio = followSet[simbolo].size();
+                        followSet[simbolo].insert(trailer.begin(), trailer.end());
+
+                        if (followSet[simbolo].size() > tamanoPrevio) {
+                            cambio = true;
+                        }
+
+                        if (HasEpsilon(simbolo)) {
+                            for (auto elem : firstSet[simbolo]) {
+                                if (elem != EPSILON) {
+                                    trailer.insert(elem);
+                                }
+                            }
+                        }
+                        else {
+                            trailer = firstSet[simbolo];
+                        }
+                    }
+                    else {
+                        trailer = { simbolo };
+                    }
+                }
+            }
+        }
+    }
+
+    void PrintFollowSet() {
+        std::cout << std::endl << "FOLLOW sets : " << std::endl;
+
+        for (auto& entrada : followSet) {
+            std::cout << "FOLLOW(" << entrada.first << ") = { ";
+
+            for (auto& simbolo : entrada.second) {
+                std::cout << simbolo << " ";
+            }
+            std::cout << "}" << std::endl;
+        }
+    }
+
+    void initializePanicMode(const std::vector<std::string>& seleccionados = {},bool fijar = false,std::string fijado = "S") {
+        if (panicConfig.initialized) return;
+
+        if (firstSet.empty()) {
+            first();
+        }
+
+        if (followSet.empty()) {
+            follow();
+        }
+
+        if (fijar) {
+            panicConfig.noTerminales = { fijado };
+        }
+        else {
+            panicConfig.noTerminales = seleccionados;
+
+            if (panicConfig.noTerminales.empty()) {
+                std::map<std::string, int> conteo;
+
+                for (const auto& fila : table) {
+                    for (const auto& entrada : fila.gotoMap) {
+                        conteo[entrada.first]++;
+                    }
+                }
+
+                std::string mayor;
+                int maximo = 0;
+                for (const auto& entrada : conteo) {
+                    if (entrada.second > maximo) {
+                        maximo = entrada.second;
+                        mayor = entrada.first;
+                    }
+                }
+
+                if (!mayor.empty()) {
+                    panicConfig.noTerminales.push_back(mayor);
+                }
+            }
+
+        }
+
+        for (auto nt : panicConfig.noTerminales) {
+            auto it = followSet.find(nt);
+            if (it != followSet.end()) {
+                panicConfig.syncTokens.insert(it->second.begin(),it->second.end());
+            }
+        }
+
+        for (int i = 0; i < static_cast<int>(table.size()); i++) {
+            for (const auto& entrada : table[i].gotoMap) {
+                if (std::find(panicConfig.noTerminales.begin(),panicConfig.noTerminales.end(),entrada.first) != panicConfig.noTerminales.end()) {
+                    panicConfig.gotosNum.push_back(i);
+                    break;
+                }
+            }
+        }
+
+        panicConfig.initialized = true;
+
+        std::cout << std::endl << "=== Configuracion del modo panico ===" << std::endl;
+        std::cout << "No terminales seleccionados: ";
+        for (std::string& nt : panicConfig.noTerminales) {
+            std::cout << nt << " ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "Tokens de sincronizacion: ";
+        for (const std::string& token : panicConfig.syncTokens) {
+            std::cout << token << " ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "Estados con GOTO: ";
+        for (int estado : panicConfig.gotosNum) {
+            std::cout << estado << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "====================================" << std::endl;;
+    }
+
+    void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry) {
+        initializePanicMode({"A"}, false);
+
+        auto& syncTokens = panicConfig.syncTokens;
+        auto& gotos = panicConfig.gotosNum;
+
+        std::string top;
+        while (!actualEntry.input.empty()) {
+            top = actualEntry.input.front();
+
+            if (syncTokens.find(top) != syncTokens.end()) {
+                break;
+            }
+            actualEntry.input.pop();
+        }
+
+        if (actualEntry.input.empty()) {
+            actualEntry.action = "Error: no se encontro un token de sincronizacion";
+            seguimiento.push_back(actualEntry);
+            return;
+        }
+        actualEntry.action ="Se consumio el input hasta encontrar el token de sincronizacion: " + top;
+        seguimiento.push_back(actualEntry);
+
+        // Desapilar hasta encontrar un estado con GOTO valido
+        while (!actualEntry.states.empty()) {
+            int estado = actualEntry.states.top();
+            auto itEstado = std::find(gotos.begin(), gotos.end(), estado);
+
+            if (itEstado != gotos.end()) {
+                auto& gotoMap = table[estado].gotoMap;
+
+                for (auto& entrada : gotoMap) {
+                    if (std::find(panicConfig.noTerminales.begin(),panicConfig.noTerminales.end(),entrada.first) != panicConfig.noTerminales.end()) {
+                        actualEntry.stac.push(entrada.first);
+                        actualEntry.states.push(std::stoi(entrada.second));
+                        actualEntry.action = "Se encontro un GOTO desde el estado " + std::to_string(estado) + " hacia " + entrada.first + ", estado destino " + entrada.second;
+
+                        seguimiento.push_back(actualEntry);
+                        return;
+                    }
+                }
+            }
+            actualEntry.states.pop();
+            actualEntry.stac.pop();
+        }
+
+        actualEntry.action = "Error: no se encontro un estado con GOTO valido";
+        seguimiento.push_back(actualEntry);
+    }
 
     void printStack(std::stack<int> pila) {
         while (!pila.empty()) {
@@ -790,7 +999,7 @@ public:
         }
 
         if (table.empty()) {
-            throw std::runtime_error("Error del parser: la tabla LR(1) no ha sido generada.");
+            throw std::runtime_error("Error del parser: la tabla LR(1) no ha sido generada");
         }
 
         std::queue<std::string> que;
@@ -800,7 +1009,7 @@ public:
         while (ss >> word) {
             que.push(word);
         }
-        que.push("$");
+        que.push(ENDOF);
 
         word = nextWord(que);
 
@@ -808,18 +1017,37 @@ public:
 
         FollowingTable Current;
         Current.states.push(0);
-        Current.stac.push("$");
+        Current.stac.push(ENDOF);
         Current.input = que;
 
         while (true) {
             if (Current.states.empty()) {
-                throw std::runtime_error("Error interno del parser: la pila de estados esta vacia.");
+                throw std::runtime_error("Error interno del parser: la pila de estados esta vacia");
             }
 
             int state = Current.states.top();
 
             if (!checkAction(state, word)) {
-                throw std::runtime_error("Error sintatico no existe el estado o no reconoce la palabra en la tabla");
+                Current.action = "Error sintactico: token inesperado (MODO PANICO) ";
+
+                std::queue<std::string> nuevaEntrada;
+                nuevaEntrada.push(word);
+
+                while (!Current.input.empty()) {
+                    nuevaEntrada.push(Current.input.front());
+                    Current.input.pop();
+                }
+
+                Current.input = nuevaEntrada;
+                followTable.push_back(Current);
+
+                panicMode(followTable, Current);
+                if (Current.states.empty() || Current.input.empty()) {
+                    break;
+                }
+
+                word = nextWord(Current.input);
+                continue;
             }
 
             Current.action = table[state].actionMap[word];
@@ -878,5 +1106,7 @@ public:
 
         printFollowing(followTable);
     }
+
+    
 
 };
