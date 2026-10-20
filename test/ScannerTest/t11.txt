@@ -1,0 +1,1 @@
+res:int=1//2 if x<=y and c!=d or not True else"a\n\""

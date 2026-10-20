@@ -3,12 +3,13 @@
 
 #include <string>
 #include "Scanner.h"
+#include "Parser.h"
 
 class Compiler
 {
 public:
 	Compiler():
-		PROJECT_PATH(CHOCOPY_ROOT), scanner(PROJECT_PATH)
+		PROJECT_PATH(CHOCOPY_ROOT), scanner(PROJECT_PATH), parser(PROJECT_PATH)
 	{}
 
 	void compile(const std::string& sourcePath)
@@ -22,6 +23,7 @@ private:
 	std::filesystem::path PROJECT_PATH;
 
 	Scanner scanner;
+	Parser parser;
 };
 
 #endif

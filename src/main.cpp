@@ -6,44 +6,39 @@
 #include "scanner.h"
 #include "compiler.h"
 #include "TableDrawer.h"
-
+#include "FileManager.h"
 
 int main()
 {
-	std::filesystem::path baseDir = std::filesystem::path(CHOCOPY_ROOT);
+    std::filesystem::path baseDir = std::filesystem::path(CHOCOPY_ROOT);
 
-    TableDrawer drawer(baseDir);
+    Parser testParser(baseDir);
 
-    std::vector<std::string> terminals = { "id", "+", "*", "$" };
-    std::vector<std::string> nonTerminals = { "E", "T" };
+    std::filesystem::path testi = baseDir / "test/ParserTest/ChocopyGrammar.txt";
+    testParser.LoadFile(testi);
 
-    std::vector<StateRow> rows;
+    testParser.first();
+    testParser.PrintFirstSet();
 
-    rows.push_back(StateRow(
-        0,
-        { {"id", "s5"} },
-        { {"E", "1"}, {"T", "2"} }
-    ));
+    testParser.follow();
+    testParser.PrintFollowSet();
 
-    rows.push_back(StateRow(
-        1,
-        { {"Target", "s6"}, {"$", "acc"} },
-        {}
-    ));
+    testParser.PrintGrammar();
 
-    drawer.saveToFile("tabla_parseo.html", terminals, nonTerminals, rows);
+    testParser.llenarTablas();
+
+    std::cout << "Probando parser LR(1)" << std::endl;
+    testParser.initializePanicMode({ "stmt", "decl_item" });
+    std::string input = "def ID ( ID : ID ) : NEWLINE INDENT pass NEWLINE DEDENT while ID < INTEGER : NEWLINE INDENT pass NEWLINE DEDENT";
+
+    try
+    {
+        testParser.following(input);
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << "Error: " << e.what() << std::endl;
+    }
 
     return 0;
-
-	Token test(TokenType::IDENTIFIER, "TESTING", Position(1, 10));
-	std::cout << test << std::endl;
-
-	Scanner testScanner(baseDir);
-
-	//testScanner.loadOneFile("test/t1.txt");
-	//testScanner.scanWholeThing();
-
-	testScanner.bulkScan("test/");
-
-	return 0;
 }

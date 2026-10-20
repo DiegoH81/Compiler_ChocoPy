@@ -1,0 +1,5 @@
+while i < 10:
+    for j in [1, 2]:
+        if j == 2:
+            pass
+return i

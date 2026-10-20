@@ -39,7 +39,7 @@ endif()
 
 add_executable(chocopy
     src/main.cpp
-)
+ "include/Parser.h")
 
 target_include_directories(chocopy PRIVATE
     include
