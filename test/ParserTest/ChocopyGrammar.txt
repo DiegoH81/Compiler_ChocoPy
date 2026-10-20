@@ -1,0 +1,126 @@
+program -> decl_list stmt_list
+
+decl_list -> decl_list decl_item
+decl_list -> ''
+decl_item -> var_def
+decl_item -> func_def
+decl_item -> class_def
+
+stmt_list -> stmt_list stmt
+stmt_list -> ''
+
+class_def -> class ID ( ID ) : NEWLINE INDENT class_body DEDENT
+
+class_body -> pass NEWLINE
+class_body -> class_item_list
+
+class_item_list -> class_item_list class_item
+class_item_list -> class_item
+class_item -> var_def
+class_item -> func_def
+
+func_def -> def ID ( params_opt ) ret_opt : NEWLINE INDENT func_body DEDENT
+
+params_opt -> params
+params_opt -> ''
+params -> typed_var
+params -> params , typed_var
+
+ret_opt -> -> type
+ret_opt -> ''
+
+func_body -> func_decl_list stmt_plus
+
+func_decl_list -> func_decl_list func_decl
+func_decl_list -> ''
+func_decl -> global_decl
+func_decl -> nonlocal_decl
+func_decl -> var_def
+func_decl -> func_def
+
+typed_var -> ID : type
+
+type -> ID
+type -> IDSTRING
+type -> [ type ]
+
+global_decl -> global ID NEWLINE
+nonlocal_decl -> nonlocal ID NEWLINE
+
+var_def -> typed_var = literal NEWLINE
+
+stmt -> simple_stmt NEWLINE
+stmt -> if expr : block elif_list else_opt
+stmt -> while expr : block
+stmt -> for ID in expr : block
+
+stmt_plus -> stmt_plus stmt
+stmt_plus -> stmt
+
+elif_list -> elif_list elif expr : block
+elif_list -> ''
+
+else_opt -> else : block
+else_opt -> ''
+
+simple_stmt -> pass
+simple_stmt -> expr
+simple_stmt -> return expr_opt
+simple_stmt -> assign_list expr
+
+assign_list -> assign_list target =
+assign_list -> target =
+
+expr_opt -> expr
+expr_opt -> ''
+
+block -> NEWLINE INDENT stmt_plus DEDENT
+
+literal -> None
+literal -> True
+literal -> False
+literal -> INTEGER
+literal -> IDSTRING
+literal -> STRING
+
+expr -> cexpr
+expr -> not expr
+expr -> expr and expr
+expr -> expr or expr
+expr -> expr if expr else expr
+
+cexpr -> ID
+cexpr -> literal
+cexpr -> [ expr_list_opt ]
+cexpr -> ( expr )
+cexpr -> member_expr
+cexpr -> index_expr
+cexpr -> member_expr ( expr_list_opt )
+cexpr -> ID ( expr_list_opt )
+cexpr -> cexpr bin_op cexpr
+cexpr -> - cexpr
+
+expr_list_opt -> expr_list
+expr_list_opt -> ''
+expr_list -> expr
+expr_list -> expr_list , expr
+
+bin_op -> +
+bin_op -> -
+bin_op -> *
+bin_op -> //
+bin_op -> %
+bin_op -> ==
+bin_op -> !=
+bin_op -> <=
+bin_op -> >=
+bin_op -> <
+bin_op -> >
+bin_op -> is
+
+member_expr -> cexpr . ID
+index_expr -> cexpr [ expr ]
+
+target -> ID
+target -> member_expr
+target -> index_expr

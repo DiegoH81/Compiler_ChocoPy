@@ -7,11 +7,19 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <fstream>
+#include <stack>
+#include <queue>
 #include <filesystem>
 #include <algorithm>
+#include <map>
+#include <set>
+#include <iomanip>
 #include "TableDrawer.h"
 
 const std::string EPSILON = "''";
+const std::string ENDOF = "$";
+
+enum Mode { NORMAL, CHOCOPY };
 
 struct Production {
     int id;
@@ -23,6 +31,12 @@ struct LR1Item {
     int productionId;
     int dot;
     std::string lookahead;
+
+    bool operator<(const LR1Item& o) const {
+        if (productionId != o.productionId) return productionId < o.productionId;
+        if (dot != o.dot) return dot < o.dot;
+        return lookahead < o.lookahead;
+    }
 };
 
 struct Transition {
@@ -41,6 +55,20 @@ struct Conflicto {
 
 using ItemSet = std::vector<LR1Item>;
 
+struct FollowingTable {
+    std::stack<int> states;
+    std::stack<std::string> stac;
+    std::queue<std::string> input;
+    std::string action;
+};
+
+struct PanicConfig {
+    std::vector<std::string> noTerminales;
+    std::unordered_set<std::string> syncTokens;
+    std::vector<int> gotosNum;
+    bool initialized = false;
+};
+
 class Parser {
 private:
     std::filesystem::path baseDir;
@@ -52,16 +80,20 @@ private:
     std::unordered_set<std::string> noTerminales;
     std::unordered_set<std::string> terminales;
     std::vector<std::string> ordenSimbolos;
+
     std::unordered_map<std::string, std::unordered_set<std::string>> firstSet;
+    std::unordered_map<std::string, std::unordered_set<std::string>> followSet;
 
     std::string startSymbol;
     std::string augmentedStart = "S'";
 
     std::vector<Transition> transitions;
+    std::vector<StateRow> table;
 
+    PanicConfig panicConfig;
 public:
     std::vector<Conflicto> conflictos;
-
+    Mode mode = NORMAL;
 public:
     Parser(std::filesystem::path inBaseDir) : baseDir(inBaseDir) {};
 
@@ -79,6 +111,10 @@ public:
         startSymbol.clear();
         transitions.clear();
         conflictos.clear();
+
+        followSet.clear();
+        table.clear();
+        panicConfig = PanicConfig{};
 
         std::cout << "Parser limpiado correctamente" << std::endl;
     }
@@ -99,7 +135,7 @@ public:
         }
     }
 
-    void registrarConflicto(int estado, const std::string& simbolo, const std::string& existente, const std::string& nueva){
+    void registrarConflicto(int estado, const std::string& simbolo, const std::string& existente, const std::string& nueva) {
         std::string tipo;
 
         if (existente[0] == 's' && nueva[0] == 'r' || existente[0] == 'r' && nueva[0] == 's') {
@@ -112,7 +148,7 @@ public:
             tipo = "OTRO";
         }
 
-        conflictos.push_back({estado, simbolo, existente, nueva, tipo});
+        conflictos.push_back({ estado, simbolo, existente, nueva, tipo });
     }
 
     void PrintSymbols() {
@@ -140,6 +176,11 @@ public:
         int iter = 0;
 
         while (iter < size) {
+            while (iter < size && (buff[iter] == '\n' || buff[iter] == '\r' || buff[iter] == ' ' || buff[iter] == '\t')) {
+                iter++;
+            }
+            if (iter >= size) break;
+
             std::string tmpBuffer = {};
             Production tmpProd = {};
 
@@ -152,7 +193,7 @@ public:
             tmpBuffer = {};
 
             if (!tmpProd.noTerminal.empty()) {
-                if (std::find(ordenSimbolos.begin(), ordenSimbolos.end(),tmpProd.noTerminal) == ordenSimbolos.end()) {
+                if (std::find(ordenSimbolos.begin(), ordenSimbolos.end(), tmpProd.noTerminal) == ordenSimbolos.end()) {
                     ordenSimbolos.push_back(tmpProd.noTerminal);
                 }
 
@@ -164,16 +205,15 @@ public:
 
             iter++;
 
-            while (iter < size && buff[iter] != '-') {
+            while (iter < size && buff[iter] == ' ') {
                 iter++;
             }
 
-            if (iter < size && buff[iter] == '-') {
-                iter++;
+            if (iter + 1 < size && buff[iter] == '-' && buff[iter + 1] == '>') {
+                iter += 2;
             }
-
-            if (iter < size && buff[iter] == '>') {
-                iter++;
+            else {
+                throw std::runtime_error("Error en la gramatica: se esperaba '->' despues del no terminal");
             }
 
             while (iter < size && buff[iter] == ' ') {
@@ -190,7 +230,7 @@ public:
                         }
 
                         if (tmpBuffer != EPSILON) {
-                            if (std::find(ordenSimbolos.begin(), ordenSimbolos.end(),tmpBuffer) == ordenSimbolos.end()) {
+                            if (std::find(ordenSimbolos.begin(), ordenSimbolos.end(), tmpBuffer) == ordenSimbolos.end()) {
 
                                 ordenSimbolos.push_back(tmpBuffer);
                             }
@@ -215,7 +255,7 @@ public:
                 }
 
                 if (tmpBuffer != EPSILON) {
-                    if (std::find(ordenSimbolos.begin(), ordenSimbolos.end(),tmpBuffer) == ordenSimbolos.end()) {
+                    if (std::find(ordenSimbolos.begin(), ordenSimbolos.end(), tmpBuffer) == ordenSimbolos.end()) {
                         ordenSimbolos.push_back(tmpBuffer);
                     }
 
@@ -262,13 +302,13 @@ public:
 
         Production augmented;
 
-        augmented.id =static_cast<int>(productions.size());
+        augmented.id = static_cast<int>(productions.size());
         augmented.noTerminal = augmentedStart;
         augmented.derivacion.push_back(startSymbol);
 
         productions.push_back(augmented);
 
-        grammar[augmentedStart].insert(grammar[augmentedStart].begin(),augmented);
+        grammar[augmentedStart].insert(grammar[augmentedStart].begin(), augmented);
         noTerminales.insert(augmentedStart);
     }
 
@@ -305,9 +345,9 @@ public:
         return firstSet[symbol].find(EPSILON) != firstSet[symbol].end();
     }
 
-    bool AddFirst(const std::string& A,const std::unordered_set<std::string>& nuevos) {
+    bool AddFirst(const std::string& A, const std::unordered_set<std::string>& nuevos) {
         bool changed = false;
-        for (auto it = nuevos.begin(); it != nuevos.end() ;it++) {
+        for (auto it = nuevos.begin(); it != nuevos.end();it++) {
 
             if (firstSet[A].find(*it) == firstSet[A].end()) {
 
@@ -319,7 +359,7 @@ public:
         return changed;
     }
 
-    void InsertWithoutEps(const std::string& A,std::unordered_set<std::string>& nuevos) {
+    void InsertWithoutEps(const std::string& A, std::unordered_set<std::string>& nuevos) {
         for (auto p : firstSet[A]) {
             if (p != EPSILON) {
                 nuevos.insert(p);
@@ -346,11 +386,11 @@ public:
                 std::string NT = gram.first;
 
                 for (auto prod : gram.second) {
-                    int size =static_cast<int>(prod.derivacion.size());
+                    int size = static_cast<int>(prod.derivacion.size());
                     std::unordered_set<std::string> rhs;
                     bool todosEpsilon = true;
                     for (int i = 0; i < size; i++) {
-                        std::string X =prod.derivacion[i];
+                        std::string X = prod.derivacion[i];
 
                         InsertWithoutEps(X, rhs);
 
@@ -377,7 +417,7 @@ public:
         bool todosEpsilon = true;
 
         for (auto simbolo : cadena) {
-            InsertWithoutEps(simbolo,resultado);
+            InsertWithoutEps(simbolo, resultado);
 
             if (!HasEpsilon(simbolo)) {
                 todosEpsilon = false;
@@ -392,12 +432,12 @@ public:
         return resultado;
     }
 
-    bool SameItem(const LR1Item& a,const LR1Item& b) {
-        return a.productionId == b.productionId &&a.dot == b.dot &&a.lookahead == b.lookahead;
+    bool SameItem(const LR1Item& a, const LR1Item& b) {
+        return a.productionId == b.productionId && a.dot == b.dot && a.lookahead == b.lookahead;
     }
 
-    bool AddItem(ItemSet& items,const LR1Item& nuevo) {
-        for (auto actual : items) {
+    bool AddItem(ItemSet& items, const LR1Item& nuevo) {
+        for (auto& actual : items) {
             if (SameItem(actual, nuevo)) {
                 return false;
             }
@@ -408,64 +448,59 @@ public:
         return true;
     }
 
-    ItemSet closure(ItemSet& item) {
-        bool cambio = true;
-        while (cambio) {
-            cambio = false;
-            for (int i = 0; i < item.size(); i++) {
-                LR1Item p = item[i];
+    ItemSet closure(const ItemSet& kernel) {
+        ItemSet result = kernel;
+        std::set<LR1Item> vistos(kernel.begin(), kernel.end());
 
-                Production prod = productions[p.productionId];
-                if (p.dot >= prod.derivacion.size()) {
-                    continue;
-                }
+        for (int i = 0; i < result.size(); i++) {
+            LR1Item p = result[i];
+            Production& prod = productions[p.productionId];
 
-                std::vector<std::string> cadena;
-                std::string symbol = prod.derivacion[p.dot];
-
-                if (noTerminales.find(symbol) != noTerminales.end()) {
-                    for (int j = p.dot + 1; j < prod.derivacion.size(); j++) {
-                        cadena.push_back(prod.derivacion[j]);
-                    }
-                    cadena.push_back(p.lookahead);
-                }
-
-                std::unordered_set<std::string> primero = firstCadena(cadena);
-                for (auto &pp : grammar[symbol]) {
-                    for (auto prim : primero) {
-                        LR1Item tmpItem = {pp.id,0,prim};
-
-                        if (AddItem(item, tmpItem)) {
-                            cambio = true;
-                        }
-                    }
-                    
-                }
-
-                
-            }
-
-        }
-        return item;
-    }
-
-    ItemSet gotto(ItemSet& item, const std::string& X) {
-        ItemSet new_items = {};
-
-        for (LR1Item itm : item) {
-            Production prod = productions[itm.productionId];
-
-            if (itm.dot >= prod.derivacion.size()) {
+            if (p.dot >= static_cast<int>(prod.derivacion.size())) {
                 continue;
             }
 
-            if (prod.derivacion[itm.dot] == X) {
-                itm.dot++;
-                AddItem(new_items, itm);
+            std::string& symbol = prod.derivacion[p.dot];
+            if (noTerminales.find(symbol) == noTerminales.end()) {
+                continue;
             }
 
+            std::vector<std::string> cadena(prod.derivacion.begin() + p.dot + 1, prod.derivacion.end());
+            cadena.push_back(p.lookahead);
+
+            std::unordered_set<std::string> primero = firstCadena(cadena);
+
+            for (const auto& pp : grammar[symbol]) {
+                for (const auto& prim : primero) {
+                    LR1Item nuevo{ pp.id, 0, prim };
+
+                    if (vistos.insert(nuevo).second) {
+                        result.push_back(nuevo);
+                    }
+                }
+            }
         }
-        return closure(new_items);
+
+        std::sort(result.begin(), result.end());
+        return result;
+    }
+
+    ItemSet gotto(const ItemSet& item, const std::string& X) {
+        ItemSet kernel;
+
+        for (const auto& itm : item) {
+            const auto& der = productions[itm.productionId].derivacion;
+
+            if (itm.dot < static_cast<int>(der.size()) && der[itm.dot] == X) {
+                kernel.push_back({ itm.productionId, itm.dot + 1, itm.lookahead });
+            }
+        }
+
+        if (kernel.empty()) {
+            return kernel;
+        }
+
+        return closure(kernel);
     }
 
     void PrintItems(ItemSet& items) {
@@ -525,6 +560,10 @@ public:
         return false;
     }
 
+    int getProductionCount() const {
+        return static_cast<int>(productions.size());
+    }
+
     std::vector<ItemSet> coleccionCanonica() {
         transitions.clear();
         if ((int)firstSet.size() <= 0) {
@@ -532,40 +571,47 @@ public:
         }
 
         std::vector<ItemSet> CCs;
+        std::map<ItemSet, int> indice;
+
         LR1Item itemInicial = { static_cast<int>(productions.size()) - 1, 0, "$" };
         ItemSet estadoInicial = closure(ItemSet{ itemInicial });
 
         CCs.push_back(estadoInicial);
-        std::vector<std::string> simbolos = ordenSimbolos;
+        indice[estadoInicial] = 0;
 
-        for (int i = 0; i < CCs.size(); i++) {
-            for (auto X : simbolos) {
+        for (int i = 0; i < static_cast<int>(CCs.size()); i++) {
+            std::unordered_set<std::string> despuesDelPunto;
+            for (const auto& it : CCs[i]) {
+                const auto& der = productions[it.productionId].derivacion;
+                if (it.dot < static_cast<int>(der.size())) {
+                    despuesDelPunto.insert(der[it.dot]);
+                }
+            }
+
+            for (const auto& X : ordenSimbolos) {
+                if (despuesDelPunto.find(X) == despuesDelPunto.end()) {
+                    continue;
+                }
+
                 ItemSet new_CC = gotto(CCs[i], X);
 
                 if (new_CC.empty()) {
                     continue;
                 }
 
-                int destino = -1;
+                int destino;
+                auto it = indice.find(new_CC);
 
-                for (int j = 0; j < CCs.size(); j++) {
-                    if (!CheckNew(new_CC, CCs[j])) {
-                        destino = j;
-                        break;
-                    }
+                if (it == indice.end()) {
+                    destino = static_cast<int>(CCs.size());
+                    indice[new_CC] = destino;
+                    CCs.push_back(std::move(new_CC));
+                }
+                else {
+                    destino = it->second;
                 }
 
-                if (destino == -1) {
-                    CCs.push_back(new_CC);
-                    destino = CCs.size() - 1;
-                }
-
-                Transition transition;
-                transition.from = i;
-                transition.symbol = X;
-                transition.to = destino;
-
-                transitions.push_back(transition);
+                transitions.push_back({ i, X, destino });
             }
         }
 
@@ -581,7 +627,7 @@ public:
         }
     }
 
-    void agregarAccion(std::map<std::string, std::string>& actionMap,int estado,const std::string& simbolo,const std::string& accion){
+    void agregarAccion(std::map<std::string, std::string>& actionMap, int estado, const std::string& simbolo, const std::string& accion) {
         auto it = actionMap.find(simbolo);
 
         if (it == actionMap.end()) {
@@ -594,7 +640,10 @@ public:
     }
 
     void llenarTablas(const std::string& nombreArchivo = "tabla_parseo.html") {
-        std::vector<StateRow> table;
+        std::cout << " ======== LLENANDO TABLAS ========= " << std::endl;
+        table.clear();
+        conflictos.clear();
+
         std::vector<ItemSet> CCs = coleccionCanonica();
 
         for (int i = 0; i < CCs.size(); i++) {
@@ -618,15 +667,16 @@ public:
                 Production prod = productions[cc.productionId];
 
                 if (cc.dot >= (int)prod.derivacion.size()) {
-                    if (prod.noTerminal == augmentedStart && cc.lookahead == "$") {
-                        agregarAccion(actionMap, i, "$", "acc");
-                    } else {
+                    if (prod.noTerminal == augmentedStart && cc.lookahead == ENDOF) {
+                        agregarAccion(actionMap, i, ENDOF, "acc");
+                    }
+                    else {
                         agregarAccion(actionMap, i, cc.lookahead, "r" + std::to_string(cc.productionId + 1));
                     }
                 }
             }
 
-            table.push_back(StateRow{i,actionMap,gotoMap});
+            table.push_back(StateRow{ i,actionMap,gotoMap });
         }
 
         TableDrawer tables{ baseDir };
@@ -676,8 +726,7 @@ public:
             Parser prueba(baseDir);
             prueba.LoadFile(archivo);
 
-            if (prueba.productions.empty() ||
-                prueba.startSymbol.empty()) {
+            if (prueba.productions.empty() || prueba.startSymbol.empty()) {
                 std::cout << "ERROR: No se pudo cargar la gramatica" << std::endl;
                 pruebasFallidas++;
                 continue;
@@ -718,6 +767,346 @@ public:
         std::cout << "Con conflictos: " << pruebasConConflictos << std::endl;
         std::cout << "Fallidas al cargar: " << pruebasFallidas << std::endl;
     }
+
+    void follow() {
+        if (firstSet.empty()) return;
+
+        for (auto NT : noTerminales) {
+            followSet[NT];
+        }
+        followSet[augmentedStart].insert(ENDOF);
+
+        bool cambio = true;
+        while (cambio) {
+            cambio = false;
+
+            for (Production prod : productions) {
+                std::string noTerminal = prod.noTerminal;
+                std::unordered_set<std::string> trailer = followSet[noTerminal];
+
+                std::vector<std::string>& deri = prod.derivacion;
+                for (int i = deri.size() - 1;i >= 0;i--) {
+                    std::string simbolo = deri[i];
+
+                    if (noTerminales.find(simbolo) != noTerminales.end()) {
+                        int tamanoPrevio = followSet[simbolo].size();
+                        followSet[simbolo].insert(trailer.begin(), trailer.end());
+
+                        if (followSet[simbolo].size() > tamanoPrevio) {
+                            cambio = true;
+                        }
+
+                        if (HasEpsilon(simbolo)) {
+                            for (auto elem : firstSet[simbolo]) {
+                                if (elem != EPSILON) {
+                                    trailer.insert(elem);
+                                }
+                            }
+                        }
+                        else {
+                            trailer = firstSet[simbolo];
+                        }
+                    }
+                    else {
+                        trailer = { simbolo };
+                    }
+                }
+            }
+        }
+    }
+
+    void PrintFollowSet() {
+        std::cout << std::endl << "FOLLOW sets : " << std::endl;
+
+        for (auto& entrada : followSet) {
+            std::cout << "FOLLOW(" << entrada.first << ") = { ";
+
+            for (auto& simbolo : entrada.second) {
+                std::cout << simbolo << " ";
+            }
+            std::cout << "}" << std::endl;
+        }
+    }
+
+    void initializePanicMode(const std::vector<std::string>& seleccionados = {}) {
+        panicConfig = PanicConfig{};
+
+        if (firstSet.empty()) {
+            first();
+        }
+
+        if (followSet.empty()) {
+            follow();
+        }
+
+        for (const std::string& nt : seleccionados) {
+            if (noTerminales.find(nt) == noTerminales.end() || nt == augmentedStart) {
+                throw std::runtime_error("Modo panico: '" + nt + "' no es un no terminal valido");
+            }
+
+            if (std::find(panicConfig.noTerminales.begin(),panicConfig.noTerminales.end(),nt) == panicConfig.noTerminales.end()) {
+                panicConfig.noTerminales.push_back(nt);
+            }
+
+            auto it = followSet.find(nt);
+            if (it != followSet.end()) {
+                panicConfig.syncTokens.insert(it->second.begin(),it->second.end());
+            }
+        }
+
+        for (int i = 0; i < static_cast<int>(table.size()); i++) {
+            for (const auto& entrada : table[i].gotoMap) {
+                if (std::find(panicConfig.noTerminales.begin(),panicConfig.noTerminales.end(),entrada.first) != panicConfig.noTerminales.end()) {
+                    panicConfig.gotosNum.push_back(i);
+                    break;
+                }
+            }
+        }
+
+        panicConfig.initialized = true;
+
+        std::cout << std::endl << "=== Configuracion del modo panico ===" << std::endl;
+        std::cout << "No terminales seleccionados: ";
+        for (std::string& nt : panicConfig.noTerminales) {
+            std::cout << nt << " ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "Tokens de sincronizacion: ";
+        for (const std::string& token : panicConfig.syncTokens) {
+            std::cout << token << " ";
+        }
+        std::cout << std::endl;
+
+        std::cout << "Estados con GOTO: ";
+        for (int estado : panicConfig.gotosNum) {
+            std::cout << estado << " ";
+        }
+        std::cout << std::endl;
+        std::cout << "====================================" << std::endl;;
+    }
+
+    void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry) {
+        if (!panicConfig.initialized) {
+            initializePanicMode();
+        }
+
+        auto& syncTokens = panicConfig.syncTokens;
+        auto& gotos = panicConfig.gotosNum;
+
+        std::string top;
+        while (!actualEntry.input.empty()) {
+            top = actualEntry.input.front();
+
+            if (syncTokens.find(top) != syncTokens.end()) {
+                break;
+            }
+            actualEntry.input.pop();
+        }
+
+        if (actualEntry.input.empty()) {
+            actualEntry.action = "Error: no se encontro un token de sincronizacion";
+            seguimiento.push_back(actualEntry);
+            return;
+        }
+        actualEntry.action = "Se consumio el input hasta encontrar el token de sincronizacion: " + top;
+        seguimiento.push_back(actualEntry);
+
+        // Desapilar hasta encontrar un estado con GOTO valido
+        while (!actualEntry.states.empty()) {
+            int estado = actualEntry.states.top();
+            auto itEstado = std::find(gotos.begin(), gotos.end(), estado);
+
+            if (itEstado != gotos.end()) {
+                auto& gotoMap = table[estado].gotoMap;
+
+                for (auto& entrada : gotoMap) {
+                    if (std::find(panicConfig.noTerminales.begin(), panicConfig.noTerminales.end(), entrada.first) != panicConfig.noTerminales.end()) {
+                        actualEntry.stac.push(entrada.first);
+                        actualEntry.states.push(std::stoi(entrada.second));
+                        actualEntry.action = "Se encontro un GOTO desde el estado " + std::to_string(estado) + " hacia " + entrada.first + ", estado destino " + entrada.second;
+
+                        seguimiento.push_back(actualEntry);
+                        return;
+                    }
+                }
+            }
+            actualEntry.states.pop();
+            actualEntry.stac.pop();
+        }
+
+        actualEntry.action = "Error: no se encontro un estado con GOTO valido";
+        seguimiento.push_back(actualEntry);
+    }
+
+    void printStack(std::stack<int> pila) {
+        while (!pila.empty()) {
+            std::cout << pila.top() << " ";
+            pila.pop();
+        }
+    }
+
+    void printStack(std::stack<std::string> pila) {
+        while (!pila.empty()) {
+            std::cout << pila.top() << " ";
+            pila.pop();
+        }
+    }
+
+    void printFollowing(const std::vector<FollowingTable>& followTable) {
+        std::cout << std::endl << std::left << std::setw(25) << "Estados" << std::setw(20) << "Pila" << std::setw(25) << "Entrada" << "Accion" << std::endl;
+
+        for (const FollowingTable& row : followTable) {
+            std::stack<int> states = row.states;
+            std::stack<std::string> stac = row.stac;
+            std::queue<std::string> input = row.input;
+
+            std::string estados, pila, entrada;
+
+            while (!states.empty()) {
+                estados = std::to_string(states.top()) + " " + estados;
+                states.pop();
+            }
+
+            while (!stac.empty()) {
+                pila = stac.top() + " " + pila;
+                stac.pop();
+            }
+
+            while (!input.empty()) {
+                entrada += input.front() + " ";
+                input.pop();
+            }
+            std::cout << std::left << std::setw(25) << estados << std::setw(20) << pila << std::setw(25) << entrada << row.action << std::endl;
+        }
+    }
+
+    bool checkAction(int CCs, std::string input) {
+        return table[CCs].actionMap.find(input) != table[CCs].actionMap.end();
+    }
+
+    std::string nextWord(std::queue<std::string>& que) {
+        if (que.empty()) return "";
+
+        std::string word = que.front();
+        que.pop();
+        return word;
+    }
+
+    void following(const std::string& input) {
+        if (input.empty()) {
+            throw std::runtime_error("Error de entrada: la cadena de entrada esta vacia");
+        }
+
+        if (table.empty()) {
+            throw std::runtime_error("Error del parser: la tabla LR(1) no ha sido generada");
+        }
+
+        std::queue<std::string> que;
+        std::stringstream ss(input);
+        std::string word;
+
+        while (ss >> word) {
+            que.push(word);
+        }
+        que.push(ENDOF);
+
+        word = nextWord(que);
+
+        std::vector<FollowingTable> followTable;
+
+        FollowingTable Current;
+        Current.states.push(0);
+        Current.stac.push(ENDOF);
+        Current.input = que;
+
+        while (true) {
+            if (Current.states.empty()) {
+                throw std::runtime_error("Error interno del parser: la pila de estados esta vacia");
+            }
+
+            int state = Current.states.top();
+
+            if (!checkAction(state, word)) {
+                Current.action = "Error sintactico: token inesperado (MODO PANICO) ";
+
+                std::queue<std::string> nuevaEntrada;
+                nuevaEntrada.push(word);
+
+                while (!Current.input.empty()) {
+                    nuevaEntrada.push(Current.input.front());
+                    Current.input.pop();
+                }
+
+                Current.input = nuevaEntrada;
+                followTable.push_back(Current);
+
+                panicMode(followTable, Current);
+                if (Current.states.empty() || Current.input.empty()) {
+                    break;
+                }
+
+                word = nextWord(Current.input);
+                continue;
+            }
+
+            Current.action = table[state].actionMap[word];
+
+            FollowingTable fila = Current;
+            std::queue<std::string> entradaActual;
+            entradaActual.push(word);
+
+            std::queue<std::string> restante = Current.input;
+            while (!restante.empty()) {
+                entradaActual.push(restante.front());
+                restante.pop();
+            }
+
+            fila.input = entradaActual;
+            followTable.push_back(fila);
+
+            if (Current.action[0] == 'r') {
+                int toRemove = std::stoi(Current.action.substr(1)) - 1;
+                Production produccion = productions[toRemove];
+
+                std::string toPut = produccion.noTerminal;
+                int sizeRemove = produccion.derivacion.size();
+
+                for (int i = 0; i < sizeRemove; i++) {
+                    Current.states.pop();
+                    Current.stac.pop();
+                }
+
+                if (Current.states.empty()) {
+                    throw std::runtime_error("Caso raro: se fueron todos los estados");
+                }
+
+                int estadoActual = Current.states.top();
+                Current.states.push(
+                    std::stoi(table[estadoActual].gotoMap[toPut])
+                );
+                Current.stac.push(toPut);
+            }
+            else if (Current.action[0] == 's') {
+                int toRemove = std::stoi(Current.action.substr(1));
+
+                Current.stac.push(word);
+                Current.states.push(toRemove);
+
+                word = nextWord(Current.input);
+            }
+            else if (Current.action == "acc") {
+                std::cout << "Aceptado!!!!" << std::endl;
+                break;
+            }
+            else {
+                throw std::runtime_error("Fallo :(");
+            }
+        }
+
+        printFollowing(followTable);
+    }
+
 
 
 };

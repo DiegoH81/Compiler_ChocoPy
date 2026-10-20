@@ -1,5 +1,6 @@
-S -> List
-List -> List Pair
-List -> Pair
-Pair -> ( List )
-Pair -> ( )
+G -> A
+G -> B
+A -> ( A )
+A -> a
+B -> ( B >
+B -> b
