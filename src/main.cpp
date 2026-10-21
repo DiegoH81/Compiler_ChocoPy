@@ -14,7 +14,7 @@ int main()
 
     Parser testParser(baseDir);
 
-    std::filesystem::path testi = baseDir / "test/ParserTest/ChocopyGrammar.txt";
+    std::filesystem::path testi = baseDir / "grammar/chocopy.txt";
     testParser.LoadFile(testi);
 
     testParser.first();
