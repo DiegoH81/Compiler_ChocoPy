@@ -107,6 +107,31 @@ public:
 		token(inToken), lexeme(inLexeme), position(inPos)
 	{}
 
+	std::string terminal() const
+	{
+		switch (token)
+		{
+		case EOFL:
+			return "$";
+		case NEW_LINE:
+			return "NEWLINE";
+		case INDENT:
+			return "INDENT";
+		case DEDENT:
+			return "DEDENT";
+		case IDENTIFIER:
+			return "ID";
+		case INTEGER:
+			return "INTEGER";
+		case STRING:
+			return isIdString(lexeme) ? "IDSTRING" : "STRING";
+		case UNRECOGNIZED:
+			return "UNRECOGNIZED";
+		default:
+			return lexeme;
+		}
+	}
+
 	friend std::ostream& operator << (std::ostream& os, const Token& t)
 	{
 		os << std::left
@@ -188,6 +213,24 @@ private:
 		case OP_ARROW: return "OP_ARROW";
 		default: return "UNKNOWN_TOKEN";
 		}
+	}
+
+	static bool isIdString(const std::string& s)
+	{
+		if (s.size() < 3 || s.front() != '"' || s.back() != '"')
+			return false;
+ 
+		for (size_t i = 1; i + 1 < s.size(); i++)
+		{
+			char c = s[i];
+			bool letter = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_';
+			bool digit = (c >= '0' && c <= '9');
+
+			if (!letter && !(digit && i > 1))
+				return false;
+		}
+
+		return true;
 	}
 };
 

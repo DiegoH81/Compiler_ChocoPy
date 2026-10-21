@@ -1,6 +1,24 @@
 cmake_minimum_required(VERSION 3.20)
 
 project(chocopy_compiler VERSION 0.1.0 LANGUAGES CXX)
+include(FetchContent)
+
+set(INJA_USE_EMBEDDED_JSON OFF CACHE BOOL "" FORCE)
+set(INJA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(BUILD_BENCHMARK OFF CACHE BOOL "" FORCE)
+
+FetchContent_Declare(json
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_Declare(inja
+  GIT_REPOSITORY https://github.com/pantor/inja.git
+  GIT_TAG v3.4.0)
+
+FetchContent_MakeAvailable(json inja)
+
+include_directories(
+    "${inja_SOURCE_DIR}/include"
+    "${json_SOURCE_DIR}/include"
+)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -35,6 +53,11 @@ if(CORE_SOURCES)
             -Wall -Wextra -Wpedantic
         )
     endif()
+
+    target_link_libraries(chocopy_core PUBLIC
+        pantor::inja
+        nlohmann_json::nlohmann_json
+    )
 endif()
 
 add_executable(chocopy

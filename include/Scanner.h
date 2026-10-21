@@ -16,7 +16,7 @@ class Scanner
 {
 public:
 	Scanner(std::filesystem::path in_baseDir) :
-		buffer(), buffPos(0), isNewLine(true), spacesStack(),
+		buffer(), buffPos(0), isNewLine(true), lineHasContent(false), spacesStack(), heldTokens(),
 		currentPos(1, 1), errorCounter(0), pendingTokens(), baseDir(in_baseDir)
 	{
 		initKeywords();
@@ -43,6 +43,9 @@ public:
 		errorCounter = 0;
 		pendingTokens = std::queue<Token>();
 		buffer.clear();
+
+		lineHasContent = false;
+		heldTokens = std::queue<Token>();
 
 		loadFile(fullPath.string());
 	}
@@ -414,12 +417,56 @@ public:
 		}
 		}
 	}
+
+	Token nextToken()
+	{
+		if (!heldTokens.empty())
+		{
+			Token t = heldTokens.front();
+			heldTokens.pop();
+			return t;
+		}
+
+		while (true)
+		{
+			Token t = getToken();
+
+			switch (t.token)
+			{
+			case NEW_LINE:
+				if (!lineHasContent)
+					continue;
+				lineHasContent = false;
+				return t;
+
+			case DEDENT:
+			case EOFL:
+				if (lineHasContent)
+				{
+					lineHasContent = false;
+					heldTokens.push(t);
+					return Token(NEW_LINE, "\\n", t.position);
+				}
+				return t;
+
+			case INDENT:
+				return t;
+
+			default:
+				lineHasContent = true;
+				return t;
+			}
+		}
+	}
+	
 private:
 	int buffPos, errorCounter;
 	bool isNewLine;
+	bool lineHasContent;
 	Position currentPos;
 	std::filesystem::path baseDir;
 	std::string buffer;
+	std::queue<Token> heldTokens;
 
 	std::stack<int> spacesStack;
 	std::queue<Token> pendingTokens;
