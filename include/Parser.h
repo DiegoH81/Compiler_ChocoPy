@@ -1020,11 +1020,13 @@ public:
         return table[CCs].actionMap.find(input) != table[CCs].actionMap.end();
     }
 
-    std::string nextWord(std::queue<std::string>& que) {
-        if (que.empty()) return "";
+    std::string nextWord(std::queue<std::string>& wordQueue)
+    {
+        if (wordQueue.empty())
+            return "";
 
-        std::string word = que.front();
-        que.pop();
+        std::string word = wordQueue.front();
+        wordQueue.pop();
         return word;
     }
 
