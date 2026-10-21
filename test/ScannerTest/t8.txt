@@ -1,6 +1,0 @@
-a: int = 10 / 3
-b: int = 10 // 3
-c: bool = a ! b
-d: int = a @ b
-e: int = a; b
-f: str = "ok" $ "test"
