@@ -1,6 +1,8 @@
 #ifndef TABLEDRAWER_H
 #define TABLEDRAWER_H
 
+#include <inja/inja.hpp>
+
 #include <iostream>
 #include <vector>
 #include <string>
@@ -31,91 +33,50 @@ public:
         const std::vector<std::string>& nonTerminals,
         const std::vector<StateRow>& rows)
     {
-        std::string html = R"(<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Tabla de Parseo LR</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
-        h2 { color: #333; }
-        table { border-collapse: collapse; width: 100%; max-width: 1000px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: center; }
-        th { background-color: #2c3e50; color: white; }
-        th.action-hdr { background-color: #2980b9; }
-        th.goto-hdr { background-color: #27ae60; }
-        tr:nth-child(even) { background-color: #f2f2f2; }
-        .state-col { font-weight: bold; background-color: #eaeded; }
-        .empty-cell { color: #aaa; }
-    </style>
-</head>
-<body>
-    <h2>Tabla de Parseo - Compilador</h2>
-    <table>
-        <thead>
-            <tr>
-                <th rowspan="2">Estado</th>
-                <th class="action-hdr" colspan=")";
+        nlohmann::json data;
 
-        html += std::to_string(terminals.size()) + R"(">ACTION (Terminales)</th>
-                <th class="goto-hdr" colspan=")";
+        data["terminals"] = nlohmann::json::array();
+        for (const auto& t : terminals)
+            data["terminals"].push_back(escapeHtml(t));
 
-        html += std::to_string(nonTerminals.size()) + R"(">GOTO (No Terminales)</th>
-            </tr>
-            <tr>
-)";
+        data["nonTerminals"] = nlohmann::json::array();
+        for (const auto& n : nonTerminals)
+            data["nonTerminals"].push_back(escapeHtml(n));
 
-        for (const auto& term : terminals)
-            html += "                <th class=\"action-hdr\">" + term + "</th>\n";
-        for (const auto& nonTerm : nonTerminals)
-            html += "                <th class=\"goto-hdr\">" + nonTerm + "</th>\n";
-
-        html += R"(            </tr>
-        </thead>
-        <tbody>
-)";
+        data["rows"] = nlohmann::json::array();
 
         for (const auto& row : rows)
         {
-            html += "            <tr>\n";
-            html += "                <td class=\"state-col\">" + std::to_string(row.stateId) + "</td>\n";
+            nlohmann::json r;
+            r["id"] = row.stateId;
+            r["cells"] = nlohmann::json::array();
 
-            // Terminales
             for (const auto& term : terminals)
             {
                 auto it = row.actionMap.find(term);
-                if (it != row.actionMap.end() && !it->second.empty())
-                    html += "                <td>" + it->second + "</td>\n";
-                else
-                    html += "                <td class=\"empty-cell\">-</td>\n";
+                r["cells"].push_back(
+                    (it != row.actionMap.end() && !it->second.empty()) ? escapeHtml(it->second) : "-");
             }
 
-            // GOTO
             for (const auto& nonTerm : nonTerminals)
             {
                 auto it = row.gotoMap.find(nonTerm);
-                if (it != row.gotoMap.end() && !it->second.empty())
-                    html += "                <td>" + it->second + "</td>\n";
-                else
-                    html += "                <td class=\"empty-cell\">-</td>\n";
+                r["cells"].push_back(
+                    (it != row.gotoMap.end() && !it->second.empty()) ? escapeHtml(it->second) : "-");
             }
 
-            html += "            </tr>\n";
+            data["rows"].push_back(r);
         }
 
-        html += R"(        </tbody>
-    </table>
-</body>
-</html>
-)";
-        return html;
+        inja::Environment env;
+
+        std::string templatePath = std::string(CHOCOPY_ROOT) + "/templates/table_template.html";
+        return env.render_file(templatePath, data);
     }
 
-    void saveToFile(
-        const std::string& filename,
-        const std::vector<std::string>& terminals,
-        const std::vector<std::string>& nonTerminals,
-        const std::vector<StateRow>& rows)
+    void saveToFile( const std::string& filename, 
+                     const std::vector<std::string>& terminals, 
+                     const std::vector<std::string>& nonTerminals, const std::vector<StateRow>& rows)
     {
         std::filesystem::path tablesDir = baseDir / "tables";
 
@@ -134,11 +95,42 @@ public:
         file << generateHTML(terminals, nonTerminals, rows);
         file.close();
 
-        std::cout << "Tabla saved at: " << finalPath << "\n";
+        std::cout << "Table saved at: " << finalPath << "\n";
     }
 
 private:
     std::filesystem::path baseDir;
+
+    static std::string escapeHtml(const std::string& s)
+    {
+        std::string out;
+        out.reserve(s.size());
+        for (char c : s)
+        {
+            switch (c)
+            {
+            case '&':
+                out += "&amp;";
+                break;
+            case '<':
+                out += "&lt;";
+                break;
+            case '>':
+                out += "&gt;";
+                break;
+            case '"':
+                out += "&quot;";
+                break;
+            case '\'':
+                out += "&#39;";
+                break;
+            default:
+                out += c;
+                break;
+            }
+        }
+        return out;
+    }
 };
 
 #endif
