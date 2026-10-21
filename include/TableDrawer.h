@@ -95,7 +95,7 @@ public:
         file << generateHTML(terminals, nonTerminals, rows);
         file.close();
 
-        std::cout << "Tabla saved at: " << finalPath << "\n";
+        std::cout << "Table saved at: " << finalPath << "\n";
     }
 
 private:
