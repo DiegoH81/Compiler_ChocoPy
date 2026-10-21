@@ -889,7 +889,8 @@ public:
         std::cout << "====================================" << std::endl;;
     }
 
-    void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry) {
+    void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry)
+    {
         if (!panicConfig.initialized) {
             initializePanicMode();
         }
@@ -916,14 +917,17 @@ public:
         seguimiento.push_back(actualEntry);
 
         // Desapilar hasta encontrar un estado con GOTO valido
-        while (!actualEntry.states.empty()) {
+        while (!actualEntry.states.empty())
+        {
             int estado = actualEntry.states.top();
             auto itEstado = std::find(gotos.begin(), gotos.end(), estado);
 
-            if (itEstado != gotos.end()) {
+            if (itEstado != gotos.end())
+            {
                 auto& gotoMap = table[estado].gotoMap;
 
-                for (auto& entrada : gotoMap) {
+                for (auto& entrada : gotoMap)
+                {
                     if (std::find(panicConfig.noTerminales.begin(), panicConfig.noTerminales.end(), entrada.first) != panicConfig.noTerminales.end()) {
                         actualEntry.stac.push(entrada.first);
                         actualEntry.states.push(std::stoi(entrada.second));
@@ -1011,7 +1015,8 @@ public:
         return rows;
     }
 
-    bool checkAction(int CCs, std::string input) {
+    bool checkAction(int CCs, std::string input)
+    {
         return table[CCs].actionMap.find(input) != table[CCs].actionMap.end();
     }
 
@@ -1039,6 +1044,119 @@ public:
             que.push(word);
         
         que.push(ENDOF);
+
+        word = nextWord(que);
+
+        std::vector<FollowingTable> followTable;
+
+        FollowingTable Current;
+        Current.states.push(0);
+        Current.stac.push(ENDOF);
+        Current.input = que;
+
+        while (true)
+        {
+            if (Current.states.empty())
+                throw std::runtime_error("Error interno del parser: la pila de estados esta vacia");
+
+            int state = Current.states.top();
+
+            if (!checkAction(state, word))
+            {
+                Current.action = "Error sintactico: token inesperado (MODO PANICO) ";
+
+                std::queue<std::string> nuevaEntrada;
+                nuevaEntrada.push(word);
+
+                while (!Current.input.empty())
+                {
+                    nuevaEntrada.push(Current.input.front());
+                    Current.input.pop();
+                }
+
+                Current.input = nuevaEntrada;
+                followTable.push_back(Current);
+
+                panicMode(followTable, Current);
+                if (Current.states.empty() || Current.input.empty())
+                    break;
+
+                word = nextWord(Current.input);
+                continue;
+            }
+
+            Current.action = table[state].actionMap[word];
+
+            FollowingTable fila = Current;
+            std::queue<std::string> entradaActual;
+            entradaActual.push(word);
+
+            std::queue<std::string> restante = Current.input;
+            while (!restante.empty())
+            {
+                entradaActual.push(restante.front());
+                restante.pop();
+            }
+
+            fila.input = entradaActual;
+            followTable.push_back(fila);
+
+            if (Current.action[0] == 'r')
+            {
+                int toRemove = std::stoi(Current.action.substr(1)) - 1;
+                Production produccion = productions[toRemove];
+
+                std::string toPut = produccion.noTerminal;
+                int sizeRemove = produccion.derivacion.size();
+
+                for (int i = 0; i < sizeRemove; i++)
+                {
+                    Current.states.pop();
+                    Current.stac.pop();
+                }
+
+                if (Current.states.empty())
+                    throw std::runtime_error("Caso raro: se fueron todos los estados");
+
+
+                int estadoActual = Current.states.top();
+                Current.states.push(
+                    std::stoi(table[estadoActual].gotoMap[toPut])
+                );
+                Current.stac.push(toPut);
+            }
+            else if (Current.action[0] == 's')
+            {
+                int toRemove = std::stoi(Current.action.substr(1));
+
+                Current.stac.push(word);
+                Current.states.push(toRemove);
+
+                word = nextWord(Current.input);
+            }
+            else if (Current.action == "acc")
+            {
+                std::cout << "Aceptado!!!!" << std::endl;
+                break;
+            }
+            else
+                throw std::runtime_error("Fallo :(");
+        }
+
+        printFollowing(followTable);
+
+        TraceDrawer drawer{ baseDir };
+        drawer.saveToFile(file_path, toTraceRows(followTable));
+    }
+
+    void get_trace_table(const Scanner& inScanner, const std::string& file_path = "trace_table.html")
+    {
+        if (table.empty())
+            throw std::runtime_error("Parser ERROR: LR(1) table not generated");
+
+        
+        std::string word;
+
 
         word = nextWord(que);
 
