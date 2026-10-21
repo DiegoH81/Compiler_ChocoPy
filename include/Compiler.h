@@ -12,11 +12,33 @@ public:
 		PROJECT_PATH(CHOCOPY_ROOT), scanner(PROJECT_PATH), parser(PROJECT_PATH)
 	{}
 
-	void compile(const std::string& sourcePath)
+	void load_grammar(const std::string& tableOutput = "grammar_table.html")
 	{
-		scanner.loadOneFile(sourcePath);
-		scanner.scanWholeThing();
+		
+		std::filesystem::path chocopyPath = PROJECT_PATH / "grammar/chocopy.txt";
+		parser.LoadFile(chocopyPath);
 
+		parser.first();
+		parser.follow();
+
+		parser.llenarTablas(tableOutput);
+	}
+
+	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput)
+	{
+		std::cout << "Staring scanner\n";
+		scanner.loadOneFile(PROJECT_PATH / sourcePath);
+		std::cout << "Staring parser analysis\n";
+		parser.initializePanicMode(panicNTs);
+
+		try
+		{
+			parser.followingStream(scanner, fileOutput);
+		}
+		catch (const std::exception& e)
+		{
+			std::cout << "Error: " << e.what() << std::endl;
+		}
 	}
 
 private:

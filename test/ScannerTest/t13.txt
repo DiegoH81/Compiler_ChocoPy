@@ -1,3 +1,0 @@
-s: str = "Escape invalido: \g"
-bad = "Cadena multilinea
-no permitida"
