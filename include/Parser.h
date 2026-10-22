@@ -1244,7 +1244,7 @@ public:
 
                 if (panicWithoutProgress) {
                     if (word == ENDOF) break;
-                    Current.action = "Sin progreso tras el panico: se descarta el token " + word;
+                    Current.action = "PANIC_MODE: Sin progreso tras el panico: se descarta el token " + word;
                     followTable.push_back(Current);
                     word = Current.input.empty() ? scanner.nextToken().terminal() : nextWord(Current.input);
                     panicWithoutProgress = false;
