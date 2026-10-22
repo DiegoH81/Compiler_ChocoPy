@@ -10,7 +10,7 @@ int main()
 
     compiladorsin.load_grammar();
 
-    for (int i = 1; i <= 8; i++)
+    for (int i = 1; i <= 9; i++)
     {
         std::string archivo = "test\\ScannerTest\\t" + std::to_string(i) + ".txt";
         std::string tracer = "tracer" + std::to_string(i) + ".html";

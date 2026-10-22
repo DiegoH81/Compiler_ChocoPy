@@ -1,0 +1,30 @@
+def fact(n: int) -> int:
+    if n <= 1:
+        return 1
+    return n * fact(n - 1)
+
+def fib(n: int) -> int:
+    a: int = 0
+    b: int = 1
+    i: int = 0
+    t: int = 0
+    while i < n:
+        t = a + b
+        a = b
+        b = t
+        i = i + 1
+    return a
+
+def is_prime(n: int) -> bool:
+    d: int = 2
+    if n < 2:
+        return False
+    while d * d <= n:
+        if n % d == 0:
+            return False
+        d = d + 1
+    return True
+
+print(fact(10))
+print(fib(20))
+print(is_prime(97))
