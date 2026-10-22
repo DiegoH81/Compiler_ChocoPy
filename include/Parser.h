@@ -966,7 +966,7 @@ public:
             seguimiento.push_back(actualEntry);
             return;
         }
-        actualEntry.action = "Se consumio el input hasta encontrar el token de sincronizacion: " + top;
+        actualEntry.action = "PANIC_MODE: Se consumio el input hasta encontrar el token de sincronizacion: " + top;
         seguimiento.push_back(actualEntry);
 
         // Desapilar hasta encontrar un estado con GOTO valido
@@ -984,7 +984,7 @@ public:
                     if (std::find(panicConfig.noTerminales.begin(), panicConfig.noTerminales.end(), entrada.first) != panicConfig.noTerminales.end()) {
                         actualEntry.stac.push(entrada.first);
                         actualEntry.states.push(std::stoi(entrada.second));
-                        actualEntry.action = "Se encontro un GOTO desde el estado " + std::to_string(estado) + " hacia " + entrada.first + ", estado destino " + entrada.second;
+                        actualEntry.action = "PANIC_MODE: Se encontro un GOTO desde el estado " + std::to_string(estado) + " hacia " + entrada.first + ", estado destino " + entrada.second;
 
                         seguimiento.push_back(actualEntry);
                         return;
@@ -1130,7 +1130,7 @@ public:
 
             if (!checkAction(state, word))
             {
-                Current.action = "Error sintactico: token inesperado (MODO PANICO) ";
+                Current.action = "PANIC_MODE: token inesperado (MODO PANICO) ";
 
                 std::queue<std::string> nuevaEntrada;
                 nuevaEntrada.push(word);
@@ -1238,7 +1238,7 @@ public:
 
             if (!checkAction(state, word))
             {
-                Current.action = "Error sintactico: token inesperado (MODO PANICO) ";
+                Current.action = "PANIC_MODE: token inesperado (MODO PANICO) ";
 
                 std::queue<std::string> nuevaEntrada;
                 nuevaEntrada.push(word);
