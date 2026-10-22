@@ -29,14 +29,21 @@ public:
         nlohmann::json data;
         data["rows"] = nlohmann::json::array();
 
+        const std::string prefix = "PANIC_MODE: ";
+
         for (const auto& row : rows)
         {
             nlohmann::json r;
             r["states"] = escapeHtml(row.states);
             r["symbols"] = escapeHtml(row.symbols);
             r["input"] = escapeHtml(row.input);
-            r["action"] = escapeHtml(row.action);
-            r["isError"] = row.action.rfind("Error", 0) == 0;
+
+            bool isError = (row.action.rfind(prefix, 0) == 0);
+            std::string cleanAction = isError ? row.action.substr(prefix.length()) : row.action;
+
+            r["action"] = escapeHtml(cleanAction);
+            r["isError"] = isError;
+
             data["rows"].push_back(r);
         }
 
