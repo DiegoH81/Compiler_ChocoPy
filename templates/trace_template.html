@@ -12,6 +12,7 @@
         tr:nth-child(even) { background-color: #f2f2f2; }
         td.mono { font-family: Consolas, monospace; }
         tr.error td { background-color: #fdecea; color: #c0392b; font-weight: bold; }
+        .index-col { text-align: center; font-weight: bold; background-color: #eaeded; width: 50px; }
     </style>
 </head>
 <body>
@@ -19,6 +20,7 @@
     <table>
         <thead>
             <tr>
+                <th>#</th>
                 <th>Estado</th>
                 <th>Símbolos</th>
                 <th>Entrada</th>
@@ -28,9 +30,10 @@
         <tbody>
             {% for row in rows %}
             <tr{% if row.isError %} class="error"{% endif %}>
-                <td class="mono">{{ row.states }}</td>
-                <td class="mono">{{ row.symbols }}</td>
-                <td class="mono">{{ row.input }}</td>
+                <td class = "index-col">{{ row.index }}</td>
+                <td class = "mono">{{ row.states }}</td>
+                <td class = "mono">{{ row.symbols }}</td>
+                <td class = "mono">{{ row.input }}</td>
                 <td>{{ row.action }}</td>
             </tr>
             {% endfor %}
