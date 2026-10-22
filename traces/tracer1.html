@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Seguimiento del Parseo LR</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+        h2 { color: #333; }
+        table { border-collapse: collapse; width: 100%; max-width: 1100px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+        th { background-color: #2c3e50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        td.mono { font-family: Consolas, monospace; }
+        tr.error td { background-color: #fdecea; color: #c0392b; font-weight: bold; }
+        .index-col { text-align: center; font-weight: bold; background-color: #eaeded; width: 50px; }
+    </style>
+</head>
+<body>
+    <h2>Seguimiento del Parseo</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Estado</th>
+                <th>Símbolos</th>
+                <th>Entrada</th>
+                <th>Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            <tr>
+                <td class = "index-col">1</td>
+                <td class = "mono">0 </td>
+                <td class = "mono">$ </td>
+                <td class = "mono">ID</td>
+                <td>r4</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">2</td>
+                <td class = "mono">0 2 </td>
+                <td class = "mono">$ decl_list </td>
+                <td class = "mono">ID</td>
+                <td>s9</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">3</td>
+                <td class = "mono">0 2 9 </td>
+                <td class = "mono">$ decl_list ID </td>
+                <td class = "mono">:</td>
+                <td>s47</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">4</td>
+                <td class = "mono">0 2 9 47 </td>
+                <td class = "mono">$ decl_list ID : </td>
+                <td class = "mono">ID</td>
+                <td>s180</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">5</td>
+                <td class = "mono">0 2 9 47 180 </td>
+                <td class = "mono">$ decl_list ID : ID </td>
+                <td class = "mono">=</td>
+                <td>r30</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">6</td>
+                <td class = "mono">0 2 9 47 181 </td>
+                <td class = "mono">$ decl_list ID : type </td>
+                <td class = "mono">=</td>
+                <td>r29</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">7</td>
+                <td class = "mono">0 2 13 </td>
+                <td class = "mono">$ decl_list typed_var </td>
+                <td class = "mono">=</td>
+                <td>s72</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">8</td>
+                <td class = "mono">0 2 13 72 </td>
+                <td class = "mono">$ decl_list typed_var = </td>
+                <td class = "mono">INTEGER</td>
+                <td>s208</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">9</td>
+                <td class = "mono">0 2 13 72 208 </td>
+                <td class = "mono">$ decl_list typed_var = INTEGER </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r58</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">10</td>
+                <td class = "mono">0 2 13 72 204 </td>
+                <td class = "mono">$ decl_list typed_var = literal </td>
+                <td class = "mono">NEWLINE</td>
+                <td>s382</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">11</td>
+                <td class = "mono">0 2 13 72 204 382 </td>
+                <td class = "mono">$ decl_list typed_var = literal NEWLINE </td>
+                <td class = "mono">ID</td>
+                <td>r35</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">12</td>
+                <td class = "mono">0 2 5 </td>
+                <td class = "mono">$ decl_list var_def </td>
+                <td class = "mono">ID</td>
+                <td>r5</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">13</td>
+                <td class = "mono">0 2 4 </td>
+                <td class = "mono">$ decl_list decl_item </td>
+                <td class = "mono">ID</td>
+                <td>r3</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">14</td>
+                <td class = "mono">0 2 </td>
+                <td class = "mono">$ decl_list </td>
+                <td class = "mono">ID</td>
+                <td>s9</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">15</td>
+                <td class = "mono">0 2 9 </td>
+                <td class = "mono">$ decl_list ID </td>
+                <td class = "mono">:</td>
+                <td>s47</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">16</td>
+                <td class = "mono">0 2 9 47 </td>
+                <td class = "mono">$ decl_list ID : </td>
+                <td class = "mono">ID</td>
+                <td>s180</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">17</td>
+                <td class = "mono">0 2 9 47 180 </td>
+                <td class = "mono">$ decl_list ID : ID </td>
+                <td class = "mono">=</td>
+                <td>r30</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">18</td>
+                <td class = "mono">0 2 9 47 181 </td>
+                <td class = "mono">$ decl_list ID : type </td>
+                <td class = "mono">=</td>
+                <td>r29</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">19</td>
+                <td class = "mono">0 2 13 </td>
+                <td class = "mono">$ decl_list typed_var </td>
+                <td class = "mono">=</td>
+                <td>s72</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">20</td>
+                <td class = "mono">0 2 13 72 </td>
+                <td class = "mono">$ decl_list typed_var = </td>
+                <td class = "mono">INTEGER</td>
+                <td>s208</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">21</td>
+                <td class = "mono">0 2 13 72 208 </td>
+                <td class = "mono">$ decl_list typed_var = INTEGER </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r58</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">22</td>
+                <td class = "mono">0 2 13 72 204 </td>
+                <td class = "mono">$ decl_list typed_var = literal </td>
+                <td class = "mono">NEWLINE</td>
+                <td>s382</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">23</td>
+                <td class = "mono">0 2 13 72 204 382 </td>
+                <td class = "mono">$ decl_list typed_var = literal NEWLINE </td>
+                <td class = "mono">ID</td>
+                <td>r35</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">24</td>
+                <td class = "mono">0 2 5 </td>
+                <td class = "mono">$ decl_list var_def </td>
+                <td class = "mono">ID</td>
+                <td>r5</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">25</td>
+                <td class = "mono">0 2 4 </td>
+                <td class = "mono">$ decl_list decl_item </td>
+                <td class = "mono">ID</td>
+                <td>r3</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">26</td>
+                <td class = "mono">0 2 </td>
+                <td class = "mono">$ decl_list </td>
+                <td class = "mono">ID</td>
+                <td>s9</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">27</td>
+                <td class = "mono">0 2 9 </td>
+                <td class = "mono">$ decl_list ID </td>
+                <td class = "mono">=</td>
+                <td>r101</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">28</td>
+                <td class = "mono">0 2 25 </td>
+                <td class = "mono">$ decl_list target </td>
+                <td class = "mono">=</td>
+                <td>s132</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">29</td>
+                <td class = "mono">0 2 25 132 </td>
+                <td class = "mono">$ decl_list target = </td>
+                <td class = "mono">ID</td>
+                <td>r52</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">30</td>
+                <td class = "mono">0 2 24 </td>
+                <td class = "mono">$ decl_list assign_list </td>
+                <td class = "mono">ID</td>
+                <td>s43</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">31</td>
+                <td class = "mono">0 2 24 43 </td>
+                <td class = "mono">$ decl_list assign_list ID </td>
+                <td class = "mono">+</td>
+                <td>r87</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">32</td>
+                <td class = "mono">0 2 24 40 </td>
+                <td class = "mono">$ decl_list assign_list primary </td>
+                <td class = "mono">+</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">33</td>
+                <td class = "mono">0 2 24 39 </td>
+                <td class = "mono">$ decl_list assign_list unary </td>
+                <td class = "mono">+</td>
+                <td>r84</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">34</td>
+                <td class = "mono">0 2 24 37 </td>
+                <td class = "mono">$ decl_list assign_list term </td>
+                <td class = "mono">+</td>
+                <td>r80</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">35</td>
+                <td class = "mono">0 2 24 36 </td>
+                <td class = "mono">$ decl_list assign_list arith </td>
+                <td class = "mono">+</td>
+                <td>s145</td>
+            </tr>
+            
+            <tr class="error">
+                <td class = "index-col">36</td>
+                <td class = "mono">0 2 24 36 145 </td>
+                <td class = "mono">$ decl_list assign_list arith + </td>
+                <td class = "mono">+</td>
+                <td>token inesperado (MODO PANICO) </td>
+            </tr>
+            
+            <tr class="error">
+                <td class = "index-col">37</td>
+                <td class = "mono">0 2 24 36 145 </td>
+                <td class = "mono">$ decl_list assign_list arith + </td>
+                <td class = "mono">INTEGER</td>
+                <td>Se consumio el input hasta encontrar el token de sincronizacion: INTEGER</td>
+            </tr>
+            
+            <tr class="error">
+                <td class = "index-col">38</td>
+                <td class = "mono">0 2 4 </td>
+                <td class = "mono">$ decl_list decl_item </td>
+                <td class = "mono">INTEGER</td>
+                <td>Se encontro un GOTO desde el estado 2 hacia decl_item, estado destino 4</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">39</td>
+                <td class = "mono">0 2 4 </td>
+                <td class = "mono">$ decl_list decl_item </td>
+                <td class = "mono">INTEGER</td>
+                <td>r3</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">40</td>
+                <td class = "mono">0 2 </td>
+                <td class = "mono">$ decl_list </td>
+                <td class = "mono">INTEGER</td>
+                <td>s29</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">41</td>
+                <td class = "mono">0 2 29 </td>
+                <td class = "mono">$ decl_list INTEGER </td>
+                <td class = "mono">*</td>
+                <td>r58</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">42</td>
+                <td class = "mono">0 2 16 </td>
+                <td class = "mono">$ decl_list literal </td>
+                <td class = "mono">*</td>
+                <td>r88</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">43</td>
+                <td class = "mono">0 2 40 </td>
+                <td class = "mono">$ decl_list primary </td>
+                <td class = "mono">*</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">44</td>
+                <td class = "mono">0 2 39 </td>
+                <td class = "mono">$ decl_list unary </td>
+                <td class = "mono">*</td>
+                <td>r84</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">45</td>
+                <td class = "mono">0 2 37 </td>
+                <td class = "mono">$ decl_list term </td>
+                <td class = "mono">*</td>
+                <td>s147</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">46</td>
+                <td class = "mono">0 2 37 147 </td>
+                <td class = "mono">$ decl_list term * </td>
+                <td class = "mono">INTEGER</td>
+                <td>s29</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">47</td>
+                <td class = "mono">0 2 37 147 29 </td>
+                <td class = "mono">$ decl_list term * INTEGER </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r58</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">48</td>
+                <td class = "mono">0 2 37 147 16 </td>
+                <td class = "mono">$ decl_list term * literal </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r88</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">49</td>
+                <td class = "mono">0 2 37 147 127 </td>
+                <td class = "mono">$ decl_list term * primary </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">50</td>
+                <td class = "mono">0 2 37 147 295 </td>
+                <td class = "mono">$ decl_list term * unary </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r81</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">51</td>
+                <td class = "mono">0 2 37 </td>
+                <td class = "mono">$ decl_list term </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r80</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">52</td>
+                <td class = "mono">0 2 36 </td>
+                <td class = "mono">$ decl_list arith </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r70</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">53</td>
+                <td class = "mono">0 2 35 </td>
+                <td class = "mono">$ decl_list cmp_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r68</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">54</td>
+                <td class = "mono">0 2 33 </td>
+                <td class = "mono">$ decl_list not_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r66</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">55</td>
+                <td class = "mono">0 2 32 </td>
+                <td class = "mono">$ decl_list and_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r64</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">56</td>
+                <td class = "mono">0 2 31 </td>
+                <td class = "mono">$ decl_list or_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r61</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">57</td>
+                <td class = "mono">0 2 20 </td>
+                <td class = "mono">$ decl_list expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r48</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">58</td>
+                <td class = "mono">0 2 18 </td>
+                <td class = "mono">$ decl_list simple_stmt </td>
+                <td class = "mono">NEWLINE</td>
+                <td>s98</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">59</td>
+                <td class = "mono">0 2 18 98 </td>
+                <td class = "mono">$ decl_list simple_stmt NEWLINE </td>
+                <td class = "mono">ID</td>
+                <td>r38</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">60</td>
+                <td class = "mono">0 2 17 </td>
+                <td class = "mono">$ decl_list stmt </td>
+                <td class = "mono">ID</td>
+                <td>r37</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">61</td>
+                <td class = "mono">0 2 3 </td>
+                <td class = "mono">$ decl_list stmt_plus </td>
+                <td class = "mono">ID</td>
+                <td>s43</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">62</td>
+                <td class = "mono">0 2 3 43 </td>
+                <td class = "mono">$ decl_list stmt_plus ID </td>
+                <td class = "mono">=</td>
+                <td>r101</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">63</td>
+                <td class = "mono">0 2 3 25 </td>
+                <td class = "mono">$ decl_list stmt_plus target </td>
+                <td class = "mono">=</td>
+                <td>s132</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">64</td>
+                <td class = "mono">0 2 3 25 132 </td>
+                <td class = "mono">$ decl_list stmt_plus target = </td>
+                <td class = "mono">ID</td>
+                <td>r52</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">65</td>
+                <td class = "mono">0 2 3 24 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list </td>
+                <td class = "mono">ID</td>
+                <td>s43</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">66</td>
+                <td class = "mono">0 2 3 24 43 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list ID </td>
+                <td class = "mono">*</td>
+                <td>r87</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">67</td>
+                <td class = "mono">0 2 3 24 40 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list primary </td>
+                <td class = "mono">*</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">68</td>
+                <td class = "mono">0 2 3 24 39 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list unary </td>
+                <td class = "mono">*</td>
+                <td>r84</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">69</td>
+                <td class = "mono">0 2 3 24 37 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list term </td>
+                <td class = "mono">*</td>
+                <td>s147</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">70</td>
+                <td class = "mono">0 2 3 24 37 147 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list term * </td>
+                <td class = "mono">INTEGER</td>
+                <td>s29</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">71</td>
+                <td class = "mono">0 2 3 24 37 147 29 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list term * INTEGER </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r58</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">72</td>
+                <td class = "mono">0 2 3 24 37 147 16 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list term * literal </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r88</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">73</td>
+                <td class = "mono">0 2 3 24 37 147 127 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list term * primary </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">74</td>
+                <td class = "mono">0 2 3 24 37 147 295 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list term * unary </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r81</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">75</td>
+                <td class = "mono">0 2 3 24 37 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list term </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r80</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">76</td>
+                <td class = "mono">0 2 3 24 36 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list arith </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r70</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">77</td>
+                <td class = "mono">0 2 3 24 35 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list cmp_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r68</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">78</td>
+                <td class = "mono">0 2 3 24 33 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list not_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r66</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">79</td>
+                <td class = "mono">0 2 3 24 32 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list and_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r64</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">80</td>
+                <td class = "mono">0 2 3 24 31 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list or_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r61</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">81</td>
+                <td class = "mono">0 2 3 24 130 </td>
+                <td class = "mono">$ decl_list stmt_plus assign_list expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r50</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">82</td>
+                <td class = "mono">0 2 3 18 </td>
+                <td class = "mono">$ decl_list stmt_plus simple_stmt </td>
+                <td class = "mono">NEWLINE</td>
+                <td>s98</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">83</td>
+                <td class = "mono">0 2 3 18 98 </td>
+                <td class = "mono">$ decl_list stmt_plus simple_stmt NEWLINE </td>
+                <td class = "mono">if</td>
+                <td>r38</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">84</td>
+                <td class = "mono">0 2 3 44 </td>
+                <td class = "mono">$ decl_list stmt_plus stmt </td>
+                <td class = "mono">if</td>
+                <td>r36</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">85</td>
+                <td class = "mono">0 2 3 </td>
+                <td class = "mono">$ decl_list stmt_plus </td>
+                <td class = "mono">if</td>
+                <td>s19</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">86</td>
+                <td class = "mono">0 2 3 19 </td>
+                <td class = "mono">$ decl_list stmt_plus if </td>
+                <td class = "mono">ID</td>
+                <td>s99</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">87</td>
+                <td class = "mono">0 2 3 19 99 </td>
+                <td class = "mono">$ decl_list stmt_plus if ID </td>
+                <td class = "mono">&gt;</td>
+                <td>r87</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">88</td>
+                <td class = "mono">0 2 3 19 119 </td>
+                <td class = "mono">$ decl_list stmt_plus if primary </td>
+                <td class = "mono">&gt;</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">89</td>
+                <td class = "mono">0 2 3 19 118 </td>
+                <td class = "mono">$ decl_list stmt_plus if unary </td>
+                <td class = "mono">&gt;</td>
+                <td>r84</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">90</td>
+                <td class = "mono">0 2 3 19 116 </td>
+                <td class = "mono">$ decl_list stmt_plus if term </td>
+                <td class = "mono">&gt;</td>
+                <td>r80</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">91</td>
+                <td class = "mono">0 2 3 19 115 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith </td>
+                <td class = "mono">&gt;</td>
+                <td>s143</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">92</td>
+                <td class = "mono">0 2 3 19 115 143 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith &gt; </td>
+                <td class = "mono">INTEGER</td>
+                <td>r76</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">93</td>
+                <td class = "mono">0 2 3 19 115 237 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith cmp_op </td>
+                <td class = "mono">INTEGER</td>
+                <td>s431</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">94</td>
+                <td class = "mono">0 2 3 19 115 237 431 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith cmp_op INTEGER </td>
+                <td class = "mono">:</td>
+                <td>r58</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">95</td>
+                <td class = "mono">0 2 3 19 115 237 427 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith cmp_op literal </td>
+                <td class = "mono">:</td>
+                <td>r88</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">96</td>
+                <td class = "mono">0 2 3 19 115 237 437 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith cmp_op primary </td>
+                <td class = "mono">:</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">97</td>
+                <td class = "mono">0 2 3 19 115 237 436 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith cmp_op unary </td>
+                <td class = "mono">:</td>
+                <td>r84</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">98</td>
+                <td class = "mono">0 2 3 19 115 237 434 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith cmp_op term </td>
+                <td class = "mono">:</td>
+                <td>r80</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">99</td>
+                <td class = "mono">0 2 3 19 115 237 433 </td>
+                <td class = "mono">$ decl_list stmt_plus if arith cmp_op arith </td>
+                <td class = "mono">:</td>
+                <td>r69</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">100</td>
+                <td class = "mono">0 2 3 19 114 </td>
+                <td class = "mono">$ decl_list stmt_plus if cmp_expr </td>
+                <td class = "mono">:</td>
+                <td>r68</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">101</td>
+                <td class = "mono">0 2 3 19 112 </td>
+                <td class = "mono">$ decl_list stmt_plus if not_expr </td>
+                <td class = "mono">:</td>
+                <td>r66</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">102</td>
+                <td class = "mono">0 2 3 19 111 </td>
+                <td class = "mono">$ decl_list stmt_plus if and_expr </td>
+                <td class = "mono">:</td>
+                <td>r64</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">103</td>
+                <td class = "mono">0 2 3 19 110 </td>
+                <td class = "mono">$ decl_list stmt_plus if or_expr </td>
+                <td class = "mono">:</td>
+                <td>r61</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">104</td>
+                <td class = "mono">0 2 3 19 104 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr </td>
+                <td class = "mono">:</td>
+                <td>s232</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">105</td>
+                <td class = "mono">0 2 3 19 104 232 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : </td>
+                <td class = "mono">NEWLINE</td>
+                <td>s418</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">106</td>
+                <td class = "mono">0 2 3 19 104 232 418 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE </td>
+                <td class = "mono">INDENT</td>
+                <td>s572</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">107</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT </td>
+                <td class = "mono">ID</td>
+                <td>s43</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">108</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID </td>
+                <td class = "mono">(</td>
+                <td>s46</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">109</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( </td>
+                <td class = "mono">ID</td>
+                <td>s155</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">110</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 155 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( ID </td>
+                <td class = "mono">)</td>
+                <td>r87</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">111</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 175 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( primary </td>
+                <td class = "mono">)</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">112</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 174 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( unary </td>
+                <td class = "mono">)</td>
+                <td>r84</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">113</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 172 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( term </td>
+                <td class = "mono">)</td>
+                <td>r80</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">114</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 171 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( arith </td>
+                <td class = "mono">)</td>
+                <td>r70</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">115</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 170 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( cmp_expr </td>
+                <td class = "mono">)</td>
+                <td>r68</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">116</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 168 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( not_expr </td>
+                <td class = "mono">)</td>
+                <td>r66</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">117</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 167 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( and_expr </td>
+                <td class = "mono">)</td>
+                <td>r64</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">118</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 166 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( or_expr </td>
+                <td class = "mono">)</td>
+                <td>r61</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">119</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 160 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( expr </td>
+                <td class = "mono">)</td>
+                <td>r99</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">120</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 179 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( expr_list </td>
+                <td class = "mono">)</td>
+                <td>r97</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">121</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 176 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( expr_list_opt </td>
+                <td class = "mono">)</td>
+                <td>s340</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">122</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 43 46 176 340 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT ID ( expr_list_opt ) </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r94</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">123</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 40 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT primary </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r86</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">124</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 39 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT unary </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r84</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">125</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 37 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT term </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r80</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">126</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 36 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT arith </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r70</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">127</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 35 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT cmp_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r68</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">128</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 33 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT not_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r66</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">129</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 32 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT and_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r64</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">130</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 31 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT or_expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r61</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">131</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 20 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT expr </td>
+                <td class = "mono">NEWLINE</td>
+                <td>r48</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">132</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 716 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT simple_stmt </td>
+                <td class = "mono">NEWLINE</td>
+                <td>s798</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">133</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 716 798 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT simple_stmt NEWLINE </td>
+                <td class = "mono">DEDENT</td>
+                <td>r38</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">134</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 715 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT stmt </td>
+                <td class = "mono">DEDENT</td>
+                <td>r37</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">135</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 714 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT stmt_plus </td>
+                <td class = "mono">DEDENT</td>
+                <td>s796</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">136</td>
+                <td class = "mono">0 2 3 19 104 232 418 572 714 796 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : NEWLINE INDENT stmt_plus DEDENT </td>
+                <td class = "mono">$</td>
+                <td>r46</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">137</td>
+                <td class = "mono">0 2 3 19 104 232 419 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : block </td>
+                <td class = "mono">$</td>
+                <td>r43</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">138</td>
+                <td class = "mono">0 2 3 19 104 232 419 573 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : block elif_list </td>
+                <td class = "mono">$</td>
+                <td>r45</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">139</td>
+                <td class = "mono">0 2 3 19 104 232 419 573 720 </td>
+                <td class = "mono">$ decl_list stmt_plus if expr : block elif_list else_opt </td>
+                <td class = "mono">$</td>
+                <td>r39</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">140</td>
+                <td class = "mono">0 2 3 44 </td>
+                <td class = "mono">$ decl_list stmt_plus stmt </td>
+                <td class = "mono">$</td>
+                <td>r36</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">141</td>
+                <td class = "mono">0 2 3 </td>
+                <td class = "mono">$ decl_list stmt_plus </td>
+                <td class = "mono">$</td>
+                <td>r1</td>
+            </tr>
+            
+            <tr>
+                <td class = "index-col">142</td>
+                <td class = "mono">0 1 </td>
+                <td class = "mono">$ program </td>
+                <td class = "mono">$</td>
+                <td>acc</td>
+            </tr>
+            
+        </tbody>
+    </table>
+</body>
+</html>

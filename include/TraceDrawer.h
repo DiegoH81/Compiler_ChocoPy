@@ -30,10 +30,11 @@ public:
         data["rows"] = nlohmann::json::array();
 
         const std::string prefix = "PANIC_MODE: ";
-
+        int index = 1;
         for (const auto& row : rows)
         {
             nlohmann::json r;
+            r["index"] = index++;
             r["states"] = escapeHtml(row.states);
             r["symbols"] = escapeHtml(row.symbols);
             r["input"] = escapeHtml(row.input);
