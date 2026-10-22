@@ -1,0 +1,9 @@
+pass1 = 1
+passs = 2
+None_ = 3
+True1 = 4
+isnot = 5
+iff = 6
+_if = 7
+printx = 8
+object = 9
