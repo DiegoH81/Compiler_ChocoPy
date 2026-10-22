@@ -1,0 +1,12 @@
+# comentario inicial
+x = 1   # comentario al final
+def f():
+    # comentario indentado
+        # comentario con indentación rara (no debe generar INDENT)
+    x: int = 1  # no debe romper nada
+
+    # línea en blanco arriba
+
+    return x
+# comentario en columna 0 después del bloque
+y = 2

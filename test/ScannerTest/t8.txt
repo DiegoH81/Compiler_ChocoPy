@@ -1,0 +1,4 @@
+def f(x, y) -> int:
+    return 1
+def g():
+    return 2
