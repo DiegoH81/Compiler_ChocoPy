@@ -458,6 +458,11 @@ public:
 			}
 		}
 	}
+
+	int getErrorCounter()
+	{
+		return errorCounter;
+	}
 	
 private:
 	int buffPos, errorCounter;

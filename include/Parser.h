@@ -300,8 +300,8 @@ public:
 
         AddAugmentedProduction();
 
-        PrintGrammar();
-        PrintSymbols();
+        //PrintGrammar();
+        //PrintSymbols();
     }
 
     void AddAugmentedProduction()
@@ -669,7 +669,7 @@ public:
 
     void llenarTablas(const std::string& nombreArchivo = "tabla_parseo.html")
     {
-        std::cout << " ======== Filling tables ========= \n";
+        //std::cout << " ======== Filling tables ========= \n";
         table.clear();
         conflictos.clear();
 
@@ -909,6 +909,7 @@ public:
 
         panicConfig.initialized = true;
 
+        /*
         std::cout << std::endl << "=== Configuracion del modo panico ===" << std::endl;
         std::cout << "No terminales seleccionados: ";
         for (std::string& nt : panicConfig.noTerminales)
@@ -928,6 +929,7 @@ public:
 
         std::cout << std::endl;
         std::cout << "====================================" << std::endl;;
+        */
     }
 
     void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry, Scanner* scanner = nullptr)        
@@ -1212,7 +1214,7 @@ public:
                 throw std::runtime_error("Fallo :(");
         }
 
-        printFollowing(followTable);
+        //printFollowing(followTable);
 
         TraceDrawer drawer{ baseDir };
         drawer.saveToFile(file_path, toTraceRows(followTable));
@@ -1328,14 +1330,14 @@ public:
             }
             else if (Current.action == "acc")
             {
-                std::cout << "Accepted!!!!" << std::endl;
+                std::cout << "PARSER: Input Accepted!!!!" << std::endl;
                 break;
             }
             else
                 throw std::runtime_error("Fallo :(");
         }
 
-        printFollowing(followTable);
+        //printFollowing(followTable);
 
         TraceDrawer drawer{ baseDir };
         drawer.saveToFile(file_path, toTraceRows(followTable));
