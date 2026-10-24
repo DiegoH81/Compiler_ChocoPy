@@ -26,9 +26,7 @@ public:
 
 	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput)
 	{
-		std::cout << "Staring scanner\n";
 		scanner.loadOneFile(PROJECT_PATH / sourcePath);
-		std::cout << "Staring parser analysis\n";
 		parser.initializePanicMode(panicNTs);
 
 		try
@@ -39,6 +37,8 @@ public:
 		{
 			std::cout << "Error: " << e.what() << std::endl;
 		}
+
+		std::cout << "TOTAL SCANNER ERRORS: " << scanner.getErrorCounter() << "\n";
 	}
 
 private:
