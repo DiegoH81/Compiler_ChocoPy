@@ -3,6 +3,8 @@
 #include <filesystem>
 
 #include "Compiler.h"
+#include "HashTable.h"
+#include "SymbolTable.h"
 
 int main()
 {
@@ -10,7 +12,7 @@ int main()
 
     compiladorsin.load_grammar();
 
-    for (int i = 1; i <= 1; i++)
+    for (int i = 10; i <= 10; i++)
     {
         std::string archivo = "test\\ScannerTest\\t" + std::to_string(i) + ".txt";
         std::string tracer = "tracer" + std::to_string(i) + ".html";

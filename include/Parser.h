@@ -19,6 +19,8 @@
 #include "Scanner.h"
 #include "TableDrawer.h"
 #include "TraceDrawer.h"
+#include "ErrorManager.h"
+#include "SemanticValue.h"
 
 const std::string EPSILON = "''";
 const std::string ENDOF = "$";
@@ -30,6 +32,23 @@ struct Production
     int id;
     std::string noTerminal;
     std::vector<std::string> derivacion;
+
+    std::string toString() const
+    {
+        std::string s = noTerminal + " ->";
+        if (derivacion.empty())
+            s += " ''";
+        for (const std::string& x : derivacion)
+            s += " " + x;
+        return s;
+    }
+};
+
+class ReduceListener
+{
+public:
+    virtual void onReduce(const Production& prod, const std::vector<SemValue>& hijos, SemValue& resultado) = 0;
+    virtual ~ReduceListener() {}
 };
 
 struct LR1Item
@@ -102,10 +121,17 @@ private:
     std::vector<StateRow> table;
 
     PanicConfig panicConfig;
+
+    ErrorManager* errorManager = nullptr;
+    Token lastToken{ TokenType::EOFL, "", Position() };
+
+    ReduceListener* reduceListener = nullptr;
+
 public:
     std::vector<Conflicto> conflictos;
     Mode mode = NORMAL;
 
+public:
     Parser(std::filesystem::path inBaseDir) : baseDir(inBaseDir) {};
 
     void CleanGrammar()
@@ -932,7 +958,8 @@ public:
         */
     }
 
-    void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry, Scanner* scanner = nullptr)        
+    void panicMode(std::vector<FollowingTable>& seguimiento, FollowingTable& actualEntry,
+        Scanner* scanner = nullptr, std::vector<SemValue>* semStack = nullptr)        
     {
         if (!panicConfig.initialized)
             initializePanicMode();
@@ -947,7 +974,7 @@ public:
             {
                 if (!scanner)
                     break;
-                actualEntry.input.push(scanner->nextToken().terminal());
+                actualEntry.input.push(readTerminal(*scanner));
             }
 
             top = actualEntry.input.front();
@@ -988,6 +1015,8 @@ public:
                     if (std::find(panicConfig.noTerminales.begin(), panicConfig.noTerminales.end(), entrada.first) != panicConfig.noTerminales.end()) {
                         actualEntry.stac.push(entrada.first);
                         actualEntry.states.push(std::stoi(entrada.second));
+                        if (semStack)
+                            semStack->push_back(SemValue(entrada.first, lastToken, true));
                         actualEntry.action = "PANIC_MODE: Se encontro un GOTO desde el estado " + std::to_string(estado) + " hacia " + entrada.first + ", estado destino " + entrada.second;
 
                         seguimiento.push_back(actualEntry);
@@ -997,6 +1026,8 @@ public:
             }
             actualEntry.states.pop();
             actualEntry.stac.pop();
+            if (semStack && !semStack->empty())
+                semStack->pop_back();
         }
 
         actualEntry.action = "Error: no se encontro un estado con GOTO valido";
@@ -1220,12 +1251,12 @@ public:
         drawer.saveToFile(file_path, toTraceRows(followTable));
     }
 
-    void followingStream(Scanner& scanner, const std::string& file_path = "trace_table.html")
+    bool followingStream(Scanner& scanner, const std::string& file_path = "trace_table.html")
     {
         if (table.empty())
             throw std::runtime_error("Error del parser: la tabla LR(1) no ha sido generada");
 
-        std::string word = scanner.nextToken().terminal();
+        std::string word = readTerminal(scanner);
 
         std::vector<FollowingTable> followTable;
 
@@ -1233,11 +1264,17 @@ public:
         Current.states.push(0);
         Current.stac.push(ENDOF);
 
+        std::vector<SemValue> semStack;
+        semStack.push_back(SemValue(ENDOF, Token(TokenType::EOFL, "$", Position())));
+
         bool panicWithoutProgress = false;
+        bool accepted = false;
         while (true)
         {
             if (Current.states.empty())
                 throw std::runtime_error("Error interno del parser: la pila de estados esta vacia");
+            if (semStack.size() != Current.states.size())
+                throw std::runtime_error("Error interno: la pila semantica se desincronizo");
 
             int state = Current.states.top();
 
@@ -1248,11 +1285,16 @@ public:
                     if (word == ENDOF) break;
                     Current.action = "PANIC_MODE: Sin progreso tras el panico: se descarta el token " + word;
                     followTable.push_back(Current);
-                    word = Current.input.empty() ? scanner.nextToken().terminal() : nextWord(Current.input);
+                    word = Current.input.empty() ? readTerminal(scanner) : nextWord(Current.input);
                     panicWithoutProgress = false;
                     continue;
                 }
 
+                if (errorManager)
+                {
+                    errorManager->report(ErrorKind::SYNTACTIC, lastToken.position,
+                        "token inesperado '" + lastToken.lexeme + "' (" + word + ")");
+                }
 
                 Current.action = "PANIC_MODE: token inesperado (MODO PANICO) ";
 
@@ -1268,7 +1310,7 @@ public:
                 Current.input = nuevaEntrada;
                 followTable.push_back(Current);
 
-                panicMode(followTable, Current, &scanner);
+                panicMode(followTable, Current, &scanner, &semStack);
                 if (Current.states.empty() || Current.input.empty())
                     break;
 
@@ -1307,6 +1349,9 @@ public:
                     Current.stac.pop();
                 }
 
+                std::vector<SemValue> hijos(semStack.end() - sizeRemove, semStack.end());
+                semStack.erase(semStack.end() - sizeRemove, semStack.end());
+
                 if (Current.states.empty())
                     throw std::runtime_error("Caso raro: se fueron todos los estados");
 
@@ -1316,6 +1361,19 @@ public:
                     std::stoi(table[estadoActual].gotoMap[toPut])
                 );
                 Current.stac.push(toPut);
+
+                Token posicion = hijos.empty() ? lastToken : hijos[0].token;
+                bool hayError = false;
+                for (const SemValue& h : hijos)
+                    if (h.isError)
+                        hayError = true;
+
+                SemValue resultado(toPut, posicion, hayError);
+
+                if (reduceListener)
+                    reduceListener->onReduce(produccion, hijos, resultado);
+
+                semStack.push_back(resultado);
             }
             else if (Current.action[0] == 's')
             {
@@ -1324,13 +1382,13 @@ public:
 
                 Current.stac.push(word);
                 Current.states.push(toRemove);
+                semStack.push_back(SemValue(word, lastToken));
 
-                word = Current.input.empty() ? scanner.nextToken().terminal()
-                                               : nextWord(Current.input);
+                word = Current.input.empty() ? readTerminal(scanner) : nextWord(Current.input);
             }
             else if (Current.action == "acc")
             {
-                std::cout << "PARSER: Input Accepted!!!!" << std::endl;
+                accepted = true;
                 break;
             }
             else
@@ -1341,6 +1399,22 @@ public:
 
         TraceDrawer drawer{ baseDir };
         drawer.saveToFile(file_path, toTraceRows(followTable));
+        return accepted;
     }
 
+    void setErrorManager(ErrorManager* manager)
+    {
+        errorManager = manager;
+    }
+
+    std::string readTerminal(Scanner& scanner)
+    {
+        lastToken = scanner.nextToken();
+        return lastToken.terminal();
+    }
+
+    void setReduceListener(ReduceListener* listener)
+    {
+        reduceListener = listener;
+    }
 };
