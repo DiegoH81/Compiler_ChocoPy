@@ -44,6 +44,17 @@ enum class ScopeKind
 	CLASS
 };
 
+inline std::string scopeKindToString(ScopeKind kind)
+{
+	switch (kind)
+	{
+	case ScopeKind::GLOBAL:   return "global";
+	case ScopeKind::FUNCTION: return "funcion";
+	case ScopeKind::CLASS:    return "clase";
+	}
+	return "?";
+}
+
 struct SymbolEntry
 {
 	std::string name;

@@ -48,6 +48,10 @@ class ReduceListener
 {
 public:
     virtual void onReduce(const Production& prod, const std::vector<SemValue>& hijos, SemValue& resultado) = 0;
+
+    // to panic mode
+    virtual void onDiscard(const SemValue& valor) {}
+
     virtual ~ReduceListener() {}
 };
 
@@ -1027,7 +1031,11 @@ public:
             actualEntry.states.pop();
             actualEntry.stac.pop();
             if (semStack && !semStack->empty())
+            {
+                if (reduceListener)
+                    reduceListener->onDiscard(semStack->back());
                 semStack->pop_back();
+            }
         }
 
         actualEntry.action = "Error: no se encontro un estado con GOTO valido";

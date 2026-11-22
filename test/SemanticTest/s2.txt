@@ -1,0 +1,13 @@
+# Redefiniciones en el mismo scope (4 errores: x, a, f, int)
+x: int = 5
+y: str = "hola"
+x: bool = True
+def f(a: int, a: str) -> int:
+    z: int = 1
+    return z
+def f() -> int:
+    return 1
+def g(f: int):
+    x: int = 2
+    pass
+int: int = 3

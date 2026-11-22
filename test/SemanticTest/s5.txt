@@ -1,0 +1,19 @@
+# Reglas de clases y return (7 errores: sinSelf, malSelf, superclase C, hereda de int, hereda de f, G(G), return fuera)
+class A(object):
+    def m(self: "A") -> int:
+        return 1
+    def sinSelf() -> int:
+        return 2
+    def malSelf(x: int) -> int:
+        return 3
+class B(C):
+    pass
+class D(int):
+    pass
+def f() -> int:
+    return 0
+class E(f):
+    pass
+class G(G):
+    pass
+return 5

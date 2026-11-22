@@ -6,6 +6,7 @@
 #include "Parser.h"
 #include "ErrorManager.h"
 #include "SemanticAnalyzer.h"
+#include "SymbolTableDrawer.h"
 
 class Compiler
 {
@@ -32,7 +33,7 @@ public:
 		std::cout << "Conflictos LR(1): " << parser.conflictos.size() << "\n";
 	}
 
-	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput)
+	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput, const std::string& symbolsOutput)
 	{
 		errors.clear();
 		semantic.reset();
@@ -56,6 +57,10 @@ public:
 		}
 
 		semantic.printSymbols();
+
+		SymbolTableDrawer symbolDrawer(PROJECT_PATH);
+		symbolDrawer.saveToFile(symbolsOutput, sourcePath, semantic.getSymbols());
+
 		errors.printSummary();
 
 		if (reachedEnd && !errors.hasErrors())

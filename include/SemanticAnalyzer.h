@@ -39,6 +39,25 @@ public:
 		symbols.print();
 	}
 
+	const SymbolTable& getSymbols() const
+	{
+		return symbols;
+	}
+
+	// panic mode heades scopes fix
+	void onDiscard(const SemValue& valor) override
+	{
+		if (valor.symbol == "func_head")
+		{
+			symbols.closeScope();
+		}
+		else if (valor.symbol == "class_head")
+		{
+			symbols.closeScope();
+			claseActual.clear();
+		}
+	}
+
 	void onReduce(const Production& prod, const std::vector<SemValue>& hijos, SemValue& resultado) override
 	{
 		if (debug)
