@@ -7,7 +7,8 @@ decl_item -> var_def
 decl_item -> func_def
 decl_item -> class_def
 
-class_def -> class ID ( ID ) : NEWLINE INDENT class_body DEDENT
+class_def -> class_head NEWLINE INDENT class_body DEDENT
+class_head -> class ID ( ID ) :
 class_body -> pass NEWLINE
 class_body -> class_item_list
 class_item_list -> class_item_list class_item
@@ -15,7 +16,8 @@ class_item_list -> class_item
 class_item -> var_def
 class_item -> func_def
 
-func_def -> def ID ( params_opt ) ret_opt : NEWLINE INDENT func_body DEDENT
+func_def -> func_head NEWLINE INDENT func_body DEDENT
+func_head -> def ID ( params_opt ) ret_opt :
 params_opt -> params
 params_opt -> ''
 params -> typed_var

@@ -11,6 +11,7 @@
 
 #include "Token.h"
 #include "Position.h"
+#include "ErrorManager.h"
 
 class Scanner
 {
@@ -458,6 +459,16 @@ public:
 			}
 		}
 	}
+
+	int getErrorCounter()
+	{
+		return errorCounter;
+	}
+
+	void setErrorManager(ErrorManager* manager)
+	{
+		errorManager = manager;
+	}
 	
 private:
 	int buffPos, errorCounter;
@@ -472,6 +483,8 @@ private:
 	std::queue<Token> pendingTokens;
 
 	std::unordered_map<std::string, TokenType> keywords;
+
+	ErrorManager* errorManager = nullptr;
 
 	void loadFile(const std::string& source)
 	{
@@ -640,6 +653,13 @@ private:
 	void logError(const Position& inPos, const std::string& type, const std::string& hint)
 	{
 		errorCounter++;
+
+		if (errorManager)
+		{
+			errorManager->report(ErrorKind::LEXICAL, inPos, type + " - " + hint);
+			return;
+		}
+
 		std::cerr << "Error at (" << inPos.row << ":" << inPos.col << ") - "
 				  << type << " - " << hint << "\n";
 	}
