@@ -1,0 +1,23 @@
+# Verificacion final de la tabla (7 errores: Foo, [Bar], parametro A, global f, nonlocal x, nonlocal w, funcion int)
+x: int = 0
+class A(object):
+    a: Foo = None
+    def m(self: "A", A: int) -> [Bar]:
+        return None
+def f(p: int) -> int:
+    global x
+    global f
+    global y
+    q: int = 0
+    def g() -> int:
+        nonlocal q
+        nonlocal p
+        nonlocal x
+        nonlocal w
+        return q
+    def int() -> int:
+        return 1
+    return q
+def h() -> [[int]]:
+    return None
+y: str = "hola"

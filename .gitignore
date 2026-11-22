@@ -19,6 +19,15 @@
 !test/
 !test/**
 
+!templates/
+!templates/**
+!grammar/
+!grammar/**
+
+# HTML generados al ejecutar el compilador
+tables/*.html
+traces/*.html
+
 build/
 build-*/
 cmake-build-*/

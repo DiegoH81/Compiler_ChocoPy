@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Tabla de Simbolos</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; }
+        h2 { color: #333; }
+        h3 { color: #2c3e50; margin: 24px 0 8px; }
+        .scope-info { color: #666; font-size: 14px; font-weight: normal; }
+        .scope { margin-bottom: 8px; }
+        table { border-collapse: collapse; width: 100%; max-width: 1000px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        th, td { border: 1px solid #ccc; padding: 6px 12px; text-align: left; }
+        th { background-color: #2c3e50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        td.mono { font-family: Consolas, monospace; }
+        tr.predefined td { color: #999; }
+        .empty { color: #999; font-style: italic; margin: 4px 0; }
+    </style>
+</head>
+<body>
+    <h2>Tabla de Simbolos: {{ source }}</h2>
+
+    {% for scope in scopes %}
+    <div class="scope" style="margin-left: {{ scope.level * 32 }}px">
+        <h3>Scope {{ scope.id }}: {{ scope.name }}
+            <span class="scope-info">({{ scope.kind }}, nivel {{ scope.level }}, padre {{ scope.parent }})</span>
+        </h3>
+
+        {% if length(scope.entries) == 0 %}
+        <p class="empty">Sin simbolos</p>
+        {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Clase de simbolo</th>
+                    <th>Tipo</th>
+                    <th>Detalle</th>
+                    <th>Posicion</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for e in scope.entries %}
+                <tr{% if e.predefined %} class="predefined"{% endif %}>
+                    <td class="mono">{{ e.name }}</td>
+                    <td>{{ e.kind }}</td>
+                    <td class="mono">{{ e.type }}</td>
+                    <td class="mono">{{ e.detail }}</td>
+                    <td>{{ e.position }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    {% endfor %}
+</body>
+</html>
