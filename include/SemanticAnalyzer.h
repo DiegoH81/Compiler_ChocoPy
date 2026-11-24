@@ -127,7 +127,7 @@ public:
 		else if (nt == "target" && prod.derivacion[0] == "ID")
 		{
 			resultado.type = tipoDeVariable(asignarNombre(hijos[0].token));
-			resultado.node = makeNode(hijos[0].token.lexeme, hijos[0].token.position);
+			resultado.node = makeNode("Id " + hijos[0].token.lexeme, hijos[0].token.position);
 		}
 		else if (nt == "assign_list")
 			reduceAssignList(prod, hijos, resultado);
@@ -139,14 +139,14 @@ public:
 			reduceStmt(prod, hijos, resultado);
 		else if (nt == "block")
 		{
-			resultado.node = makeNode("bloque", hijos[1].token.position);
+			resultado.node = makeNode("Block", hijos[1].token.position);
 			agregarItems(resultado.node, hijos[2]);
 		}
 		else if (nt == "elif_list" && hijos.size() == 5)
 			reduceElif(hijos, resultado);
 		else if (nt == "else_opt" && hijos.size() == 3)
 		{
-			resultado.node = makeNode("else", hijos[0].token.position);
+			resultado.node = makeNode("Else", hijos[0].token.position);
 			resultado.node->addChild(hijos[2].node);
 		}
 		else if (nt == "program")
@@ -229,7 +229,7 @@ private:
 			reportarError(valor.token.position, "no se puede inicializar '" + entrada.name + "' de tipo " +
 				var.type + " con un valor de tipo " + valor.type);
 
-		resultado.node = makeNode("var " + entrada.name + ": " + var.type, entrada.position);
+		resultado.node = makeNode("VarDef " + entrada.name + ": " + var.type, entrada.position);
 		resultado.node->addChild(valor.node);
 	}
 
@@ -270,7 +270,7 @@ private:
 			declarar(parametro);
 		}
 
-		std::string firma = "def " + funcion.name + "(";
+		std::string firma = "FuncDef " + funcion.name + "(";
 		for (size_t i = 0; i < params.paramNames.size(); i++)
 		{
 			if (i > 0)
@@ -321,7 +321,7 @@ private:
 		
 		claseActual = clase.name;
 
-		resultado.node = makeNode("class " + clase.name + "(" + clase.superClass + ")", clase.position);
+		resultado.node = makeNode("ClassDef " + clase.name + "(" + clase.superClass + ")", clase.position);
 	}
 
 	void reduceClassDef(const std::vector<SemValue>& hijos, SemValue& resultado)
@@ -341,7 +341,7 @@ private:
 	{
 		if (prod.derivacion[0] == "pass")
 		{
-			resultado.node = makeNode("pass", hijos[0].token.position);
+			resultado.node = makeNode("Pass", hijos[0].token.position);
 		}
 		else
 		{
@@ -402,7 +402,7 @@ private:
 
 		declarar(ref);
 
-		std::string palabra = (kind == SymbolKind::GLOBAL_REF) ? "global " : "nonlocal ";
+		std::string palabra = (kind == SymbolKind::GLOBAL_REF) ? "Global " : "Nonlocal ";
 		resultado.node = makeNode(palabra + ref.name, ref.position);
 	}
 
@@ -432,18 +432,18 @@ private:
 
 		if (primero == "pass")
 		{
-			resultado.node = makeNode("pass", hijos[0].token.position);
+			resultado.node = makeNode("Pass", hijos[0].token.position);
 		}
 		else if (primero == "return")
 		{
 			verificarReturn(hijos[0].token);
-			resultado.node = makeNode("return", hijos[0].token.position);
+			resultado.node = makeNode("Return", hijos[0].token.position);
 			resultado.node->addChild(hijos[1].node);
 		}
 		else if (primero == "assign_list")
 		{
 			verificarAsignacion(hijos[0], hijos[1]);
-			resultado.node = makeNode("=", hijos[1].token.position);
+			resultado.node = makeNode("Assign", hijos[1].token.position);
 			agregarItems(resultado.node, hijos[0]);
 			resultado.node->addChild(hijos[1].node);
 		}
@@ -461,7 +461,7 @@ private:
 		else if (primero == "if")
 		{
 			verificarCondicion(hijos[1], "if");
-			resultado.node = makeNode("if", pos);
+			resultado.node = makeNode("If", pos);
 			resultado.node->addChild(hijos[1].node);
 			resultado.node->addChild(hijos[3].node);
 			agregarItems(resultado.node, hijos[4]);
@@ -470,15 +470,15 @@ private:
 		else if (primero == "while")
 		{
 			verificarCondicion(hijos[1], "while");
-			resultado.node = makeNode("while", pos);
+			resultado.node = makeNode("While", pos);
 			resultado.node->addChild(hijos[1].node);
 			resultado.node->addChild(hijos[3].node);
 		}
 		else if (primero == "for")
 		{
 			asignarNombre(hijos[1].token);
-			resultado.node = makeNode("for", pos);
-			resultado.node->addChild(makeNode(hijos[1].token.lexeme, hijos[1].token.position));
+			resultado.node = makeNode("For", pos);
+			resultado.node->addChild(makeNode("Id " + hijos[1].token.lexeme, hijos[1].token.position));
 			resultado.node->addChild(hijos[3].node);
 			resultado.node->addChild(hijos[5].node);
 		}
@@ -489,7 +489,7 @@ private:
 		verificarCondicion(hijos[2], "elif");
 
 		SemValue elif = hijos[1];
-		elif.node = makeNode("elif", hijos[1].token.position);
+		elif.node = makeNode("Elif", hijos[1].token.position);
 		elif.node->addChild(hijos[2].node);
 		elif.node->addChild(hijos[4].node);
 
@@ -502,7 +502,7 @@ private:
 		resolverPendientes();
 		verificarTabla();
 
-		raiz = makeNode("program", Position(1, 1));
+		raiz = makeNode("Program", Position(1, 1));
 		for (const SemValue& h : hijos)
 			agregarItems(raiz, h);
 
@@ -512,17 +512,33 @@ private:
 	void reduceLiteral(const Production& prod, SemValue& resultado)
 	{
 		const std::string& valor = prod.derivacion[0];
+		std::string etiqueta;
 
 		if (valor == "None")
+		{
 			resultado.type = "<None>";
+			etiqueta = "None";
+		}
 		else if (valor == "True" || valor == "False")
+		{
 			resultado.type = "bool";
+			etiqueta = "Bool ";
+		}
 		else if (valor == "INTEGER")
+		{
 			resultado.type = "int";
+			etiqueta = "Num ";
+		}
 		else
+		{
 			resultado.type = "str";
+			etiqueta = "Str ";
+		}
 
-		resultado.node = makeNode(resultado.token.lexeme, resultado.token.position);
+		if (valor != "None")
+			etiqueta += resultado.token.lexeme;
+
+		resultado.node = makeNode(etiqueta, resultado.token.position);
 	}
 
 	void reducePrimary(const Production& prod, const std::vector<SemValue>& hijos, SemValue& resultado)
@@ -533,17 +549,17 @@ private:
 		if (d[0] == "ID" && d.size() == 1)
 		{
 			resultado.type = tipoDeVariable(usarNombre(primero));
-			resultado.node = makeNode(primero.lexeme, primero.position);
+			resultado.node = makeNode("Id " + primero.lexeme, primero.position);
 		}
 		else if (d[0] == "ID")
 		{
 			resultado.type = tipoDeLlamada(usarNombre(primero));
-			resultado.node = makeNode(primero.lexeme + "()", primero.position);
+			resultado.node = makeNode("Call " + primero.lexeme, primero.position);
 			agregarItems(resultado.node, hijos[2]);
 		}
 		else if (d[0] == "member_expr" && d.size() == 4)
 		{
-			resultado.node = makeNode("()", hijos[1].token.position);
+			resultado.node = makeNode("MethodCall", hijos[1].token.position);
 			resultado.node->addChild(hijos[0].node);
 			agregarItems(resultado.node, hijos[2]);
 		}
@@ -554,7 +570,7 @@ private:
 		}
 		else if (d[0] == "[")
 		{
-			resultado.node = makeNode("[...]", primero.position);
+			resultado.node = makeNode("ListExpr", primero.position);
 			agregarItems(resultado.node, hijos[1]);
 		}
 	}
@@ -563,14 +579,14 @@ private:
 	{
 		const Token& atributo = hijos[2].token;
 
-		resultado.node = makeNode(".", hijos[1].token.position);
+		resultado.node = makeNode("Member", hijos[1].token.position);
 		resultado.node->addChild(hijos[0].node);
-		resultado.node->addChild(makeNode(atributo.lexeme, atributo.position));
+		resultado.node->addChild(makeNode("Id " + atributo.lexeme, atributo.position));
 	}
 
 	void reduceIndex(const std::vector<SemValue>& hijos, SemValue& resultado)
 	{
-		resultado.node = makeNode("[]", hijos[1].token.position);
+		resultado.node = makeNode("Index", hijos[1].token.position);
 		resultado.node->addChild(hijos[0].node);
 		resultado.node->addChild(hijos[2].node);
 	}
@@ -666,7 +682,7 @@ private:
 		verificarCondicion(hijos[2], "if ... else");
 		resultado.type = unirTipos(hijos[0].type, hijos[4].type);
 
-		resultado.node = makeNode("if-else", hijos[1].token.position);
+		resultado.node = makeNode("IfExpr", hijos[1].token.position);
 		resultado.node->addChild(hijos[2].node);
 		resultado.node->addChild(hijos[0].node);
 		resultado.node->addChild(hijos[4].node);
@@ -683,7 +699,7 @@ private:
 		const std::string& der = hijos[2].type;
 		const Token& op = hijos[1].token;
 
-		resultado.node = makeNode(op.lexeme, op.position);
+		resultado.node = makeNode("BinOp " + op.lexeme, op.position);
 		resultado.node->addChild(hijos[0].node);
 		resultado.node->addChild(hijos[2].node);
 
@@ -701,7 +717,7 @@ private:
 		const Token& op = hijos[0].token;
 		const std::string& operando = hijos[1].type;
 
-		resultado.node = makeNode(op.lexeme, op.position);
+		resultado.node = makeNode("UnaryOp " + op.lexeme, op.position);
 		resultado.node->addChild(hijos[1].node);
 
 		if (operando.empty())
