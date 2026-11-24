@@ -6,6 +6,9 @@
 #include "Parser.h"
 #include "ErrorManager.h"
 #include "SemanticAnalyzer.h"
+#include "SymbolTableDrawer.h"
+#include "ASTTraversal.h"
+#include "ASTDrawer.h"
 
 class Compiler
 {
@@ -32,7 +35,12 @@ public:
 		std::cout << "Conflictos LR(1): " << parser.conflictos.size() << "\n";
 	}
 
-	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput)
+	void setAstDebug(bool activo)
+	{
+		astDebug = activo;
+	}
+
+	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput, const std::string& symbolsOutput, const std::string& astOutput = "")
 	{
 		errors.clear();
 		semantic.reset();
@@ -55,7 +63,20 @@ public:
 			std::cout << "Error: " << e.what() << std::endl;
 		}
 
+		if (astDebug && semantic.getAst())
+			ASTTraversal::printRecorridos(semantic.getAst(), std::cout);
+
 		semantic.printSymbols();
+
+		SymbolTableDrawer symbolDrawer(PROJECT_PATH);
+		symbolDrawer.saveToFile(symbolsOutput, sourcePath, semantic.getSymbols());
+
+		if (!astOutput.empty() && semantic.getAst())
+		{
+			ASTDrawer astDrawer(PROJECT_PATH);
+			astDrawer.saveToFile(astOutput, sourcePath, semantic.getAst());
+		}
+
 		errors.printSummary();
 
 		if (reachedEnd && !errors.hasErrors())
@@ -71,6 +92,7 @@ private:
 	Parser parser;
 	ErrorManager errors;
 	SemanticAnalyzer semantic;
+	bool astDebug = false;
 };
 
 #endif

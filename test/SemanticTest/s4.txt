@@ -1,0 +1,21 @@
+# Usos de nombres (7 errores: asignar x sin global, z no definido, a no visible en metodo, w, print, i, h)
+x: int = 0
+def f() -> int:
+    y: int = 1
+    x = 5
+    y = g()
+    return z
+def g() -> int:
+    global x
+    x = 2
+    return x
+class A(object):
+    a: int = 0
+    def m(self: "A") -> int:
+        return a
+x = f()
+w = 3
+print = 4
+for i in [1, 2]:
+    pass
+h()

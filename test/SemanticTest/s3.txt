@@ -1,0 +1,18 @@
+# Clases, atributos, metodos, global y nonlocal (2 errores: clase A repetida, z local despues de nonlocal z)
+class A(object):
+    x: int = 0
+    def get(self: "A") -> int:
+        return self.x
+class B(A):
+    pass
+class A(object):
+    pass
+y: int = 1
+def f() -> int:
+    z: int = 0
+    def g() -> int:
+        nonlocal z
+        global y
+        z: int = 5
+        return z
+    return z

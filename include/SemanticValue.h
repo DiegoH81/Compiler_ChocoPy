@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "Token.h"
+#include "ASTNode.h"
 
 struct SemValue
 {
@@ -16,6 +17,10 @@ struct SemValue
 	std::vector<std::string> paramNames;
 	std::vector<std::string> paramTypes;
 	std::vector<Position> paramPositions;
+
+	std::vector<SemValue> items;
+
+	ASTPtr node;
 
 	SemValue(const std::string& inSymbol, const Token& inToken, bool inIsError = false) :
 		symbol(inSymbol), token(inToken), isError(inIsError)

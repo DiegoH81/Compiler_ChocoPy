@@ -1,0 +1,21 @@
+x: int = 5
+b: bool = True
+s: str = "a"
+if b:
+    pass
+if x:
+    pass
+elif x > 2:
+    pass
+elif s:
+    pass
+else:
+    pass
+while x < 10:
+    x = x + 1
+while s:
+    pass
+x = 1 if b else 2
+x = 1 if x else 2
+s = "a" if b else 3
+s = "a" if b else "b"

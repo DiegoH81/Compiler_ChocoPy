@@ -1,6 +1,7 @@
 #ifndef ERRORMANAGER_H
 #define ERRORMANAGER_H
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -65,7 +66,10 @@ public:
 		if (errors.empty())
 			os << "Sin errores.\n";
 
-		for (const CompilerError& e : errors)
+		std::vector<CompilerError> ordenados = errors;
+		std::stable_sort(ordenados.begin(), ordenados.end(), vaAntes);
+
+		for (const CompilerError& e : ordenados)
 		{
 			os << "[" << kindToString(e.kind) << "] ("
 			   << e.position.row << ":" << e.position.col << ") "
@@ -92,6 +96,13 @@ public:
 
 private:
 	std::vector<CompilerError> errors;
+
+	static bool vaAntes(const CompilerError& a, const CompilerError& b)
+	{
+		if (a.position.row != b.position.row)
+			return a.position.row < b.position.row;
+		return a.position.col < b.position.col;
+	}
 };
 
 #endif

@@ -1,0 +1,41 @@
+# Programa valido: no debe dar ningun error
+count: int = 0
+names: [str] = None
+d: "Dog" = None
+
+class Animal(object):
+    name: str = ""
+    def __init__(self: "Animal"):
+        pass
+    def speak(self: "Animal") -> str:
+        return self.name
+
+class Dog(Animal):
+    tricks: int = 0
+    def learn(self: "Dog", n: int):
+        self.tricks = n
+
+def add(a: int, b: int) -> int:
+    return a + b
+
+def counter() -> int:
+    total: int = 0
+    def inc(step: int) -> int:
+        nonlocal total
+        total = total + step
+        return total
+    inc(1)
+    return inc(2)
+
+def bump():
+    global count
+    count = count + helper()
+
+def helper() -> int:
+    return 1
+
+d = Dog()
+d.learn(3)
+count = add(1, 2)
+bump()
+print(d.speak())

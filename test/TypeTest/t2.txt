@@ -1,0 +1,26 @@
+class A(object):
+    pass
+class B(A):
+    pass
+x: int = 5
+s: str = "hola"
+b: bool = False
+a: A = None
+y: int = "hola"
+z: str = None
+c: bool = 1
+def f() -> int:
+    global x
+    x = "no"
+    return 0
+x = 10
+x = s
+s = x + 1
+b = x < 3
+a = B()
+a = A()
+a = 5
+x = y = 7
+x = s = 3
+x = f()
+s = f()
