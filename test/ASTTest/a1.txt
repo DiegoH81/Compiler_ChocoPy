@@ -1,0 +1,17 @@
+a: int = 2
+b: int = 3
+s: [int] = None
+class P(object):
+    v: int = 0
+    def m(self: "P", k: int) -> int:
+        return k
+p: P = None
+a + b * 2
+(a + b) * 2
+not a < b and b > 0
+-a + len("hola")
+1 if a > b else 2
+[1, 2, 3]
+s[0] + 1
+p.v
+p.m(a + 1)

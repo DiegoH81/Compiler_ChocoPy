@@ -28,5 +28,18 @@ int main()
         compiladorsin.compile(archivo, { "stmt", "decl_item" }, tracer, symbols);
     }
 
+    compiladorsin.setAstDebug(true);
+
+    for (int i = 1; i <= 2; i++)
+    {
+        std::string archivo = "test\\ASTTest\\a" + std::to_string(i) + ".txt";
+        std::string tracer = "tracer_a" + std::to_string(i) + ".html";
+        std::string symbols = "symbols_a" + std::to_string(i) + ".html";
+
+        compiladorsin.compile(archivo, { "stmt", "decl_item" }, tracer, symbols);
+    }
+
+    compiladorsin.setAstDebug(false);
+
     return 0;
 }

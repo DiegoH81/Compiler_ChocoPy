@@ -33,6 +33,11 @@ public:
 		std::cout << "Conflictos LR(1): " << parser.conflictos.size() << "\n";
 	}
 
+	void setAstDebug(bool activo)
+	{
+		semantic.debugAst = activo;
+	}
+
 	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput, const std::string& symbolsOutput)
 	{
 		errors.clear();
