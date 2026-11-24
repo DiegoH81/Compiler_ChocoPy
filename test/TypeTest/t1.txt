@@ -1,0 +1,21 @@
+x: int = 5
+s: str = "a"
+b: bool = True
+x + 1
+x + s
+s + s
+s * 2
+x < 3
+s < s
+b == True
+x == s
+not b
+not x
+-x
+-s
+b and x < 2
+x or b
+None is None
+x is x
+(x + 1) * 2 // 3 % 4 - 1
+(x + s) * 2

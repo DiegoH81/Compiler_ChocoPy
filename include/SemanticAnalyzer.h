@@ -9,6 +9,7 @@
 #include "ErrorManager.h"
 #include "SemanticValue.h"
 #include "SymbolTable.h"
+#include "TypeRules.h"
 
 struct UsoPendiente
 {
@@ -65,6 +66,9 @@ public:
 
 		const std::string& nt = prod.noTerminal;
 
+		if (hijos.size() == 1)
+			resultado.type = hijos[0].type;
+
 		if (nt == "type")
 			reduceType(prod, hijos, resultado);
 		else if (nt == "typed_var")
@@ -92,12 +96,28 @@ public:
 			reduceRefDecl(hijos, SymbolKind::GLOBAL_REF);
 		else if (nt == "nonlocal_decl")
 			reduceRefDecl(hijos, SymbolKind::NONLOCAL_REF);
-		else if (nt == "primary" && prod.derivacion[0] == "ID")
-			usarNombre(hijos[0].token);
+		else if (nt == "literal")
+			reduceLiteral(prod, resultado);
+		else if (nt == "primary")
+			reducePrimary(prod, hijos, resultado);
+		else if (esOperadorBinario(nt) && hijos.size() == 3)
+			reduceBinario(hijos, resultado);
+		else if ((nt == "unary" || nt == "not_expr") && hijos.size() == 2)
+			reduceUnario(hijos, resultado);
 		else if (nt == "target" && prod.derivacion[0] == "ID")
-			asignarNombre(hijos[0].token);
+			resultado.type = tipoDeVariable(asignarNombre(hijos[0].token));
+		else if (nt == "assign_list")
+			reduceAssignList(prod, hijos, resultado);
+		else if (nt == "simple_stmt" && prod.derivacion[0] == "assign_list")
+			verificarAsignacion(hijos[0], hijos[1]);
 		else if (nt == "stmt" && prod.derivacion[0] == "for")
 			asignarNombre(hijos[1].token);
+		else if (nt == "stmt" && (prod.derivacion[0] == "if" || prod.derivacion[0] == "while"))
+			verificarCondicion(hijos[1], prod.derivacion[0]);
+		else if (nt == "elif_list" && hijos.size() == 5)
+			verificarCondicion(hijos[2], "elif");
+		else if (nt == "expr" && hijos.size() == 5)
+			reduceCondicional(hijos, resultado);
 		else if (nt == "simple_stmt" && prod.derivacion[0] == "return")
 			verificarReturn(hijos[0].token);
 		else if (nt == "program")
@@ -173,6 +193,11 @@ private:
 		entrada.position = var.token.position;
 
 		declarar(entrada);
+
+		const SemValue& valor = hijos[2];
+		if (!esAsignable(valor.type, var.type))
+			reportarError(valor.token.position, "no se puede inicializar '" + entrada.name + "' de tipo " +
+				var.type + " con un valor de tipo " + valor.type);
 	}
 
 	// func_head -> def ID ( params_opt ) ret_opt :
@@ -225,7 +250,8 @@ private:
 		clase.position = nombre.token.position;
 		clase.superClass = hijos[3].token.lexeme;
 
-		verificarSuperclase(hijos[3].token);
+		if (!verificarSuperclase(hijos[3].token))
+			clase.superClass = "object";
 
 		SymbolEntry* entrada = declarar(clase);
 
@@ -236,7 +262,7 @@ private:
 		claseActual = clase.name;
 	}
 
-	void verificarSuperclase(const Token& super)
+	bool verificarSuperclase(const Token& super)
 	{
 		const std::string& nombre = super.lexeme;
 		SymbolEntry* entrada = symbols.globalScope()->table.find(nombre);
@@ -247,6 +273,10 @@ private:
 			reportarError(super.position, "'" + nombre + "' no es una clase, no se puede heredar de ella");
 		else if (nombre == "int" || nombre == "bool" || nombre == "str")
 			reportarError(super.position, "no se puede heredar de la clase especial '" + nombre + "'");
+		else
+			return true;
+
+		return false;
 	}
 
 	void verificarPrimerParametro(const SymbolEntry& metodo)
@@ -273,18 +303,187 @@ private:
 		ref.kind = kind;
 		ref.position = nombre.token.position;
 
+		SymbolEntry* destino = nullptr;
+		if (kind == SymbolKind::GLOBAL_REF)
+			destino = symbols.globalScope()->table.find(ref.name);
+		else
+			destino = symbols.lookup(ref.name, symbols.currentScope()->parent);
+
+		if (destino && (destino->kind == SymbolKind::VARIABLE || destino->kind == SymbolKind::PARAMETER))
+			ref.type = destino->type;
+
 		declarar(ref);
 	}
-	
-	void usarNombre(const Token& id)
-	{
-		if (symbols.lookup(id.lexeme) != nullptr)
-			return;
 
-		pendientes.push_back(UsoPendiente{ id.lexeme, symbols.currentScope(), id.position });
+	void reduceLiteral(const Production& prod, SemValue& resultado)
+	{
+		const std::string& valor = prod.derivacion[0];
+
+		if (valor == "None")
+			resultado.type = "<None>";
+		else if (valor == "True" || valor == "False")
+			resultado.type = "bool";
+		else if (valor == "INTEGER")
+			resultado.type = "int";
+		else
+			resultado.type = "str";
 	}
 
-	void asignarNombre(const Token& id)
+	void reducePrimary(const Production& prod, const std::vector<SemValue>& hijos, SemValue& resultado)
+	{
+		const std::vector<std::string>& d = prod.derivacion;
+
+		if (d[0] == "ID" && d.size() == 1)
+			resultado.type = tipoDeVariable(usarNombre(hijos[0].token));
+		else if (d[0] == "ID")
+			resultado.type = tipoDeLlamada(usarNombre(hijos[0].token));
+		else if (d[0] == "(")
+			resultado.type = hijos[1].type;
+	}
+
+	std::string superclaseDe(const std::string& tipo)
+	{
+		SymbolEntry* clase = symbols.globalScope()->table.find(tipo);
+
+		if (clase && clase->kind == SymbolKind::CLASS)
+			return clase->superClass;
+
+		return "";
+	}
+
+	bool esSubtipo(const std::string& a, const std::string& b)
+	{
+		if (a == b || b == "object")
+			return true;
+
+		for (std::string t = superclaseDe(a); !t.empty(); t = superclaseDe(t))
+		{
+			if (t == b)
+				return true;
+		}
+		return false;
+	}
+
+	bool esAsignable(const std::string& desde, const std::string& hacia)
+	{
+		if (desde.empty() || hacia.empty())
+			return true;
+
+		if (esSubtipo(desde, hacia))
+			return true;
+
+		if (desde == "<None>")
+			return !TypeRules::isSpecial(hacia);
+
+		if (desde == "<Empty>")
+			return TypeRules::isList(hacia);
+
+		return false;
+	}
+
+	std::string unirTipos(const std::string& a, const std::string& b)
+	{
+		if (a.empty() || b.empty())
+			return "";
+
+		if (esAsignable(a, b))
+			return b;
+
+		if (esAsignable(b, a))
+			return a;
+
+		for (std::string t = superclaseDe(a); !t.empty(); t = superclaseDe(t))
+		{
+			if (esSubtipo(b, t))
+				return t;
+		}
+		return "object";
+	}
+
+	void verificarCondicion(const SemValue& condicion, const std::string& sentencia)
+	{
+		if (condicion.type.empty() || condicion.type == "bool")
+			return;
+
+		reportarError(condicion.token.position, "la condicion del '" + sentencia + "' debe ser bool, no " + condicion.type);
+	}
+
+	void reduceCondicional(const std::vector<SemValue>& hijos, SemValue& resultado)
+	{
+		verificarCondicion(hijos[2], "if ... else");
+		resultado.type = unirTipos(hijos[0].type, hijos[4].type);
+	}
+
+	static bool esOperadorBinario(const std::string& nt)
+	{
+		return nt == "arith" || nt == "term" || nt == "cmp_expr" || nt == "and_expr" || nt == "or_expr";
+	}
+
+	void reduceBinario(const std::vector<SemValue>& hijos, SemValue& resultado)
+	{
+		const std::string& izq = hijos[0].type;
+		const std::string& der = hijos[2].type;
+		const Token& op = hijos[1].token;
+
+		if (izq.empty() || der.empty())
+			return;
+
+		resultado.type = TypeRules::binaryResult(op.lexeme, izq, der);
+
+		if (resultado.type.empty())
+			reportarError(op.position, "el operador '" + op.lexeme + "' no se puede aplicar a " + izq + " y " + der);
+	}
+
+	void reduceUnario(const std::vector<SemValue>& hijos, SemValue& resultado)
+	{
+		const Token& op = hijos[0].token;
+		const std::string& operando = hijos[1].type;
+
+		if (operando.empty())
+			return;
+
+		resultado.type = TypeRules::unaryResult(op.lexeme, operando);
+
+		if (resultado.type.empty())
+			reportarError(op.position, "el operador '" + op.lexeme + "' no se puede aplicar a " + operando);
+	}
+
+	static std::string tipoDeVariable(const SymbolEntry* e)
+	{
+		if (e == nullptr)
+			return "";
+
+		if (e->kind == SymbolKind::FUNCTION || e->kind == SymbolKind::METHOD || e->kind == SymbolKind::CLASS)
+			return "";
+
+		return e->type;
+	}
+
+	static std::string tipoDeLlamada(const SymbolEntry* e)
+	{
+		if (e == nullptr)
+			return "";
+
+		if (e->kind == SymbolKind::FUNCTION)
+			return e->type;
+
+		if (e->kind == SymbolKind::CLASS)
+			return e->name;
+
+		return "";
+	}
+
+	SymbolEntry* usarNombre(const Token& id)
+	{
+		SymbolEntry* entrada = symbols.lookup(id.lexeme);
+		if (entrada != nullptr)
+			return entrada;
+
+		pendientes.push_back(UsoPendiente{ id.lexeme, symbols.currentScope(), id.position });
+		return nullptr;
+	}
+
+	SymbolEntry* asignarNombre(const Token& id)
 	{
 		SymbolEntry* local = symbols.lookupLocal(id.lexeme);
 
@@ -292,11 +491,39 @@ private:
 		{
 			reportarError(id.position, "no se puede asignar a '" + id.lexeme +
 				"': no esta declarado en este scope (falta declararlo o usar global/nonlocal)");
-			return;
+			return nullptr;
 		}
 
 		if (local->kind == SymbolKind::FUNCTION || local->kind == SymbolKind::CLASS)
+		{
 			reportarError(id.position, "'" + id.lexeme + "' no es una variable, no se le puede asignar");
+			return nullptr;
+		}
+
+		return local;
+	}
+
+	void reduceAssignList(const Production& prod, const std::vector<SemValue>& hijos, SemValue& resultado)
+	{
+		if (prod.derivacion.size() == 2)
+		{
+			resultado.items.push_back(hijos[0]);
+		}
+		else
+		{
+			resultado.items = hijos[0].items;
+			resultado.items.push_back(hijos[1]);
+		}
+	}
+
+	void verificarAsignacion(const SemValue& destinos, const SemValue& valor)
+	{
+		for (const SemValue& destino : destinos.items)
+		{
+			if (!esAsignable(valor.type, destino.type))
+				reportarError(destino.token.position, "no se puede asignar un valor de tipo " + valor.type +
+					" a '" + destino.token.lexeme + "' de tipo " + destino.type);
+		}
 	}
 
 	void resolverPendientes()

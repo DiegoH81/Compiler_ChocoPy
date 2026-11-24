@@ -17,6 +17,8 @@ struct SemValue
 	std::vector<std::string> paramTypes;
 	std::vector<Position> paramPositions;
 
+	std::vector<SemValue> items;
+
 	SemValue(const std::string& inSymbol, const Token& inToken, bool inIsError = false) :
 		symbol(inSymbol), token(inToken), isError(inIsError)
 	{}
