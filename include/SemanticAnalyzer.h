@@ -22,7 +22,6 @@ class SemanticAnalyzer : public ReduceListener
 {
 public:
 	bool debug = false;
-	bool debugAst = false;
 
 	void setErrorManager(ErrorManager* manager)
 	{
@@ -508,9 +507,6 @@ private:
 			agregarItems(raiz, h);
 
 		resultado.node = raiz;
-
-		if (debugAst)
-			printTree(raiz, std::cout);
 	}
 
 	void reduceLiteral(const Production& prod, SemValue& resultado)
