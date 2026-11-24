@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Arbol de Sintaxis Abstracta</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f9f9f9; color: #333; }
+        h2 { color: #333; margin-bottom: 6px; }
+        h3 { color: #2c3e50; margin: 28px 0 10px; }
+
+        .stats { display: flex; gap: 12px; flex-wrap: wrap; margin: 12px 0 8px; }
+        .stat { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 8px 14px; border-radius: 6px; font-size: 14px; }
+        .stat b { font-size: 18px; color: #2c3e50; margin-right: 4px; }
+
+        .legend { display: flex; gap: 8px 16px; flex-wrap: wrap; font-size: 13px; color: #555; margin: 8px 0 14px; align-items: center; }
+        .legend-item { display: inline-flex; gap: 6px; align-items: center; }
+        .legend .node { padding: 3px 8px; }
+
+        .tree-wrap { background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); padding: 24px 12px; overflow-x: auto; }
+        .tree { width: max-content; min-width: 100%; }
+
+        .tree ul { display: flex; justify-content: center; position: relative; padding: 20px 0 0 0; margin: 0; }
+        .tree li { display: flex; flex-direction: column; align-items: center; list-style: none; position: relative; padding: 20px 5px 0 5px; }
+
+        .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; width: 50%; height: 20px; border-top: 2px solid #b0b7c3; }
+        .tree li::after { right: auto; left: 50%; border-left: 2px solid #b0b7c3; }
+        .tree li:only-child::before, .tree li:only-child::after { display: none; }
+        .tree li:only-child { padding-top: 0; }
+        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
+        .tree li:last-child::before { border-right: 2px solid #b0b7c3; border-radius: 0 6px 0 0; }
+        .tree li:first-child::after { border-radius: 6px 0 0 0; }
+        .tree ul ul::before { content: ''; position: absolute; top: 0; left: 50%; height: 20px; border-left: 2px solid #b0b7c3; }
+        .tree > ul { padding-top: 0; }
+
+        .node { display: inline-flex; flex-direction: column; align-items: center; padding: 6px 10px; border-radius: 6px; border: 1px solid; font-family: Consolas, monospace; font-size: 13px; white-space: nowrap; }
+        .node .type { font-size: 11px; color: #777; margin-top: 2px; }
+        .node.root { background: #2c3e50; border-color: #2c3e50; color: white; font-weight: bold; }
+        .node.op { background: #e8f0fe; border-color: #4a6fa5; color: #1f3b66; font-weight: bold; }
+        .node.leaf { background: #eaf7ee; border-color: #3c8d5a; color: #1e5631; }
+
+        .tree .node.toggle { cursor: pointer; user-select: none; }
+        .tree .node.toggle:hover { box-shadow: 0 0 0 3px rgba(74,111,165,0.25); }
+        .tree li.collapsed > ul { display: none; }
+        .tree li.collapsed > .node { border-style: dashed; border-width: 2px; }
+        .tree li.collapsed > .node::after { content: "+" attr(data-hidden); margin-top: 3px; font-size: 10px; font-weight: bold; color: white; background: #4a6fa5; border-radius: 8px; padding: 0 6px; }
+
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 10px; }
+        .controls button { font-family: Arial, sans-serif; font-size: 13px; padding: 6px 12px; border: 1px solid #2c3e50; background: white; color: #2c3e50; border-radius: 4px; cursor: pointer; }
+        .controls button:hover { background: #2c3e50; color: white; }
+
+        table { border-collapse: collapse; width: 100%; max-width: 1100px; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
+        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background-color: #2c3e50; color: white; }
+        tr:nth-child(even) { background-color: #f2f2f2; }
+        .index-col { text-align: center; font-weight: bold; background-color: #eaeded; width: 60px; }
+        .chip { display: inline-block; margin: 2px 3px; padding: 2px 7px; border-radius: 4px; font-family: Consolas, monospace; font-size: 12px; border: 1px solid; }
+        .chip.op { background: #e8f0fe; border-color: #4a6fa5; color: #1f3b66; }
+        .chip.leaf { background: #eaf7ee; border-color: #3c8d5a; color: #1e5631; }
+    </style>
+</head>
+<body>
+    <h2>Arbol de Sintaxis Abstracta: {{ source }}</h2>
+
+    <div class="stats">
+        <div class="stat"><b>{{ totalNodes }}</b> nodos</div>
+        <div class="stat"><b>{{ internal }}</b> operadores (internos)</div>
+        <div class="stat"><b>{{ leaves }}</b> operandos (hojas)</div>
+        <div class="stat"><b>{{ depth }}</b> niveles de profundidad</div>
+    </div>
+
+    <div class="legend">
+        <span class="legend-item"><span class="node root">Program</span> raiz</span>
+        <span class="legend-item"><span class="node op">BinOp +</span> operador / nodo interno</span>
+        <span class="legend-item"><span class="node leaf">Id x</span> operando / hoja</span>
+        <span class="legend-item">(clic en un nodo azul para colapsar o expandir sus hijos; pasa el mouse para ver su posicion)</span>
+    </div>
+
+    <div class="controls">
+        <button type="button" onclick="expandirTodo()">Expandir todo</button>
+        <button type="button" onclick="colapsarDesdeNivel(1)">Solo sentencias</button>
+        <button type="button" onclick="colapsarDesdeNivel(2)">Hasta nivel 2</button>
+        <button type="button" onclick="colapsarDesdeNivel(0)">Colapsar todo</button>
+    </div>
+
+    <div class="tree-wrap">
+        <div class="tree">
+            <ul>{{ tree }}</ul>
+        </div>
+    </div>
+
+    <h3>Recorrido DFS en preorden (por sentencia)</h3>
+    <table>
+        <thead>
+            <tr>
+                <th>Linea</th>
+                <th>Nodos en el orden en que se visitan</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in statements %}
+            <tr>
+                <td class="index-col">{{ s.line }}</td>
+                <td>{% for n in s.nodes %}<span class="chip {% if n.leaf %}leaf{% else %}op{% endif %}">{{ n.label }}</span>{% endfor %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <script>
+        var contenedor = document.querySelector(".tree-wrap");
+        var raizLista = document.querySelector(".tree > ul");
+
+        function centrar() {
+            contenedor.scrollLeft = (contenedor.scrollWidth - contenedor.clientWidth) / 2;
+        }
+
+        function colapsar(li) {
+            var nodo = li.querySelector(":scope > .node");
+            var ocultos = li.querySelectorAll(":scope > ul .node").length;
+            nodo.setAttribute("data-hidden", ocultos);
+            li.classList.add("collapsed");
+        }
+
+        function expandir(li) {
+            li.classList.remove("collapsed");
+        }
+
+        function nivelDe(li) {
+            var nivel = 0;
+            var padre = li.parentElement;
+            while (padre !== raizLista) {
+                if (padre.tagName === "LI")
+                    nivel++;
+                padre = padre.parentElement;
+            }
+            return nivel;
+        }
+
+        function todosLosNodos() {
+            return document.querySelectorAll(".tree li");
+        }
+
+        function expandirTodo() {
+            var lista = todosLosNodos();
+            for (var i = 0; i < lista.length; i++)
+                expandir(lista[i]);
+            centrar();
+        }
+
+        function colapsarDesdeNivel(nivel) {
+            var lista = todosLosNodos();
+            for (var i = 0; i < lista.length; i++) {
+                var li = lista[i];
+                if (!li.querySelector(":scope > ul"))
+                    continue;
+
+                if (nivelDe(li) >= nivel)
+                    colapsar(li);
+                else
+                    expandir(li);
+            }
+            centrar();
+        }
+
+        document.querySelector(".tree").addEventListener("click", function (evento) {
+            var nodo = evento.target.closest(".node.toggle");
+            if (!nodo)
+                return;
+
+            var li = nodo.parentElement;
+            if (li.classList.contains("collapsed"))
+                expandir(li);
+            else
+                colapsar(li);
+        });
+
+        if ({{ totalNodes }} > 150)
+            colapsarDesdeNivel(1);
+        else
+            centrar();
+    </script>
+</body>
+</html>

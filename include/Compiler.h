@@ -8,6 +8,7 @@
 #include "SemanticAnalyzer.h"
 #include "SymbolTableDrawer.h"
 #include "ASTTraversal.h"
+#include "ASTDrawer.h"
 
 class Compiler
 {
@@ -39,7 +40,7 @@ public:
 		astDebug = activo;
 	}
 
-	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput, const std::string& symbolsOutput)
+	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput, const std::string& symbolsOutput, const std::string& astOutput = "")
 	{
 		errors.clear();
 		semantic.reset();
@@ -69,6 +70,12 @@ public:
 
 		SymbolTableDrawer symbolDrawer(PROJECT_PATH);
 		symbolDrawer.saveToFile(symbolsOutput, sourcePath, semantic.getSymbols());
+
+		if (!astOutput.empty() && semantic.getAst())
+		{
+			ASTDrawer astDrawer(PROJECT_PATH);
+			astDrawer.saveToFile(astOutput, sourcePath, semantic.getAst());
+		}
 
 		errors.printSummary();
 
