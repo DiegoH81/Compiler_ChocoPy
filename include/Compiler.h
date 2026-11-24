@@ -7,6 +7,7 @@
 #include "ErrorManager.h"
 #include "SemanticAnalyzer.h"
 #include "SymbolTableDrawer.h"
+#include "ASTTraversal.h"
 
 class Compiler
 {
@@ -35,7 +36,7 @@ public:
 
 	void setAstDebug(bool activo)
 	{
-		semantic.debugAst = activo;
+		astDebug = activo;
 	}
 
 	void compile(const std::string& sourcePath, const std::vector<std::string>& panicNTs, const std::string &fileOutput, const std::string& symbolsOutput)
@@ -61,6 +62,9 @@ public:
 			std::cout << "Error: " << e.what() << std::endl;
 		}
 
+		if (astDebug && semantic.getAst())
+			ASTTraversal::printRecorridos(semantic.getAst(), std::cout);
+
 		semantic.printSymbols();
 
 		SymbolTableDrawer symbolDrawer(PROJECT_PATH);
@@ -81,6 +85,7 @@ private:
 	Parser parser;
 	ErrorManager errors;
 	SemanticAnalyzer semantic;
+	bool astDebug = false;
 };
 
 #endif
