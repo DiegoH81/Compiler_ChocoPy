@@ -24,7 +24,6 @@
 !grammar/
 !grammar/**
 
-# HTML generados al ejecutar el compilador
 tables/*.html
 traces/*.html
 
